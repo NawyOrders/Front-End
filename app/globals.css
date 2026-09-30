@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root { --heading-tracking: 0; }
+  html { scroll-behavior: smooth; scroll-padding-top: 5rem; }
+  body { @apply bg-cream font-sans text-ink antialiased overflow-x-hidden; line-height: 1.7; text-wrap: pretty; }
+  h1, h2, h3 { line-height: 1.4; text-wrap: balance; }
+  :focus-visible { @apply outline-2 outline-offset-2 outline-brand; outline-style: solid; }
+}
+
+@layer components {
+  .container-x { @apply mx-auto w-full max-w-6xl px-5 sm:px-8; }
+  .section { @apply relative py-16 sm:py-24; }
+  .tag { @apply inline-flex items-center rounded-full bg-brand-soft px-3 py-1 text-xs font-semibold leading-5 text-brand-dark; }
+  .h-display { @apply font-alexandria text-[1.75rem] font-extrabold leading-[1.35] tracking-[var(--heading-tracking)] min-[420px]:text-[2.25rem] sm:text-[3rem] xl:text-[3.25rem]; }
+  .h-section { @apply font-alexandria text-[1.875rem] font-extrabold leading-[1.35] tracking-[var(--heading-tracking)] sm:text-[2.25rem] lg:text-[3rem]; }
+  .btn { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-6 text-sm font-bold leading-6 transition duration-200 sm:text-base; }
+  .btn-primary { @apply btn bg-brand text-white shadow-cta hover:bg-brand-dark; }
+  .btn-ghost { @apply btn border border-navy/20 bg-white/70 text-navy hover:border-navy hover:bg-white; }
+  .card { @apply rounded-card border border-line bg-white shadow-card; }
+  /* Horizontal touch scrollers (pricing plans on mobile): keep the swipe,
+     drop the desktop scrollbar chrome. */
+  .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+
+  /* Showcase phone fan: the three phones live in one fixed-size "design stage"
+     that is scaled as a single unit, so all three stay on screen down to 320px
+     and the fan is identical in RTL and LTR. The phones themselves are placed
+     by motion (see components/landing/Showcase.tsx); this only owns the
+     stage box and the rotation origin those transforms are measured from. */
+  .fan-viewport {
+    --fan-w: 640px;
+    --fan-h: 540px;
+    --fan-pw: 220px;
+    --fan-s: clamp(0.4, calc((100vw - 2.5rem) / var(--fan-w)), 1);
+    container-type: inline-size;
+    height: calc(var(--fan-h) * var(--fan-s));
+  }
+  @supports (width: 1cqi) {
+    .fan-viewport { --fan-s: clamp(0.4, calc(100cqi / var(--fan-w)), 1); }
+  }
+  .fan-viewport .fan-stage {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: var(--fan-w);
+    height: var(--fan-h);
+    transform-origin: top center;
+    transform: translateX(-50%) scale(var(--fan-s));
+  }
+  .fan-viewport .fan-phone {
+    position: absolute;
+    bottom: 30px;
+    left: calc(50% - (var(--fan-pw) / 2));
+    width: var(--fan-pw);
+    transform-origin: bottom center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
