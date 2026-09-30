@@ -26,8 +26,7 @@ function DishCard({ dict, tone }: { dict: Dictionary; tone: Tone }) {
         <p className="text-[10px] text-ink-muted">{dict.mockup.dishDesc}</p>
         <div className="mt-0.5 flex items-center justify-between">
           <span className="text-[10px] font-extrabold text-navy">{dict.mockup.dishPrice}</span>
-          {/* The add button nudges toward the dish on hover, in reading order. */}
-          <span className={`icon-shift grid size-3.5 place-items-center rounded-full text-[8px] font-bold text-white ${tone === "warm" ? "bg-brand" : "bg-sky-500"}`}>+</span>
+          <span className={`grid size-3.5 place-items-center rounded-full text-[8px] font-bold text-white ${tone === "warm" ? "bg-brand" : "bg-sky-500"}`}>+</span>
         </div>
       </div>
     </div>
@@ -42,26 +41,23 @@ export const PhoneMockup = memo(function PhoneMockup({ dict, alt, tone = "warm",
       <div className={`flex h-full flex-col overflow-hidden rounded-[1.6rem] ${screen}`}>
         <div className="mx-auto mt-1.5 h-1.5 w-12 rounded-full bg-navy" />
         <div className="flex items-center justify-between px-3 pt-2 text-[8px] font-extrabold text-navy">
-          {/* Three rules that bob and part on hover, like a live screen. */}
-          <span className="phone-burger" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round">
-              <path d="M3 6h18M3 12h18M3 18h18" />
-            </svg>
-          </span>
-          <span>{dict.mockup.myRestaurant}</span>
-          <span className="size-3 rounded-full bg-brand" />
+          <span aria-hidden="true">≡</span><span>{dict.mockup.myRestaurant}</span><span className="size-3 rounded-full bg-brand" />
         </div>
         <div className="px-3 pt-2">
           <p className="text-[10px] text-ink-muted">{dict.mockup.welcome}</p>
           <p className="text-[10px] font-extrabold leading-tight text-navy">{dict.mockup.greeting}</p>
         </div>
-        {/* The banner keeps a slow shimmer; the pill inside keeps a soft pulse. */}
-        <div className={`phone-banner mx-3 mt-2 rounded-xl bg-gradient-to-l ${accent} p-2 text-white`}>
+        <div className={`mx-3 mt-2 rounded-xl bg-gradient-to-l ${accent} p-2 text-white`}>
           <p className="text-[10px] opacity-90">{dict.mockup.promoLabel}</p>
           <p className="text-[11px] font-extrabold leading-tight">{dict.mockup.promoValue}</p>
-          <span className="phone-cta mt-1 inline-block rounded-md bg-white/90 px-1.5 text-[10px] font-bold text-navy">{dict.mockup.cta}</span>
+          <span className="mt-1 inline-block rounded-md bg-white/90 px-1.5 text-[10px] font-bold text-navy">{dict.mockup.cta}</span>
         </div>
         <div className="mx-3 mt-2 rounded-md bg-white px-2 py-1 text-[12px] text-ink-muted ring-1 ring-black/5">{dict.mockup.search}</div>
+        {/* <div className="mt-2 flex gap-1 px-3 text-[6px] font-semibold text-navy" aria-hidden="true">
+          <span className="rounded-full bg-navy px-1.5 py-0.5 text-white">{dict.mockup.filterAll}</span>
+          <span className="rounded-full bg-white px-1.5 py-0.5">{dict.mockup.filterBurger}</span>
+          <span className="rounded-full bg-white px-1.5 py-0.5">{dict.mockup.filterPizza}</span>
+        </div> */}
         <p className="mt-2 px-3 text-[12px] font-extrabold text-navy">{dict.mockup.newDishes}</p>
         <div className="mt-1 space-y-1.5 px-3 pb-3">
           <DishCard dict={dict} tone={tone} />
