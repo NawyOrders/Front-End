@@ -29,13 +29,19 @@
      that is scaled as a single unit, so all three stay on screen down to 320px
      and the fan is identical in RTL and LTR. The phones themselves are placed
      by motion (see components/landing/Showcase.tsx); this only owns the
-     stage box and the rotation origin those transforms are measured from. */
+     stage box and the rotation origin those transforms are measured from.
+
+     The box is sized explicitly and never allowed to collapse, because the
+     three phones inside it are absolutely positioned and would otherwise
+     contribute no height at all. */
   .fan-viewport {
     --fan-w: 640px;
     --fan-h: 540px;
     --fan-pw: 220px;
     --fan-s: clamp(0.4, calc((100vw - 2.5rem) / var(--fan-w)), 1);
     container-type: inline-size;
+    width: min(100%, var(--fan-w));
+    min-height: calc(var(--fan-h) * 0.4);
     height: calc(var(--fan-h) * var(--fan-s));
   }
   @supports (width: 1cqi) {

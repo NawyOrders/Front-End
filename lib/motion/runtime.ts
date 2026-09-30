@@ -1,11 +1,14 @@
 /**
  * Motion runtime — the browser-side plumbing behind src/styles/motion.css.
  *
- * Three jobs, all of them deliberately outside React:
+ * Four jobs, all of them deliberately outside React:
  *
  *   1. ONE shared IntersectionObserver for every reveal on the page.
- *   2. ONE passive scroll listener + rAF that writes `--scroll` and `--p`.
- *   3. ONE passive pointermove + rAF that writes `--mx` / `--my` (spotlight)
+ *   2. A MutationObserver that registers `data-reveal` nodes as they appear, so
+ *      anything mounted late (a tab, a toggle, a lazy section, the next route)
+ *      is still revealed.
+ *   3. ONE passive scroll listener + rAF that writes `--scroll` and `--p`.
+ *   4. ONE passive pointermove + rAF that writes `--mx` / `--my` (spotlight)
  *      and drives the tilt hook.
  *
  * Everything a component needs is a CSS custom property on a DOM node, so no
@@ -53,18 +56,25 @@ const OBSERVER_OPTIONS: IntersectionObserverInit = {
   rootMargin: "0px 0px -10% 0px",
 };
 
-type RevealHandler = (entry: IntersectionObserverEntry) => void;
+/** How long an on-screen element may stay hidden before it is revealed anyway. */
+const SAFETY_MS = 1500;
+
+type RevealHandler = () => void;
 
 let observer: IntersectionObserver | null = null;
 const handlers = new Map<Element, RevealHandler>();
+
+/** Every element the shared observer is already responsible for. */
+const tracked = new WeakSet<Element>();
 
 function sharedObserver() {
   if (observer) return observer;
   observer = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
         const handler = handlers.get(entry.target);
-        if (handler) handler(entry);
+        if (handler) handler();
       }
     },
     OBSERVER_OPTIONS,
@@ -77,27 +87,105 @@ function sharedObserver() {
  *
  * The hit adds `.is-in` and unregisters immediately: a reveal is once-only, so
  * scrolling back up never replays it and the element stops being a target.
- * Everything that needs a different rule than the shared threshold — the plan
- * carousel, a column that hands its end state to its own children — is handled
+ * Everything that needs a different rule than the shared threshold is handled
  * by observing the right element, never by loosening the observer.
  */
-export function observeReveal(element: Element, onEnter: RevealHandler): () => void {
+export function observeReveal(element: Element, onEnter: RevealHandler = () => {}): () => void {
   const io = sharedObserver();
+  // Already revealed — a node that was moved rather than recreated. Registering
+  // it again would replay its entrance, and replay the count-up with it.
+  if (element.classList.contains("is-in")) return () => {};
+  tracked.add(element);
 
-  const handler: RevealHandler = (entry) => {
-    if (!entry.isIntersecting) return;
-    onEnter(entry);
+  let done = false;
+  let safety = 0;
+
+  const finish = () => {
+    if (done) return;
+    done = true;
+    window.clearTimeout(safety);
+    onEnter();
     element.classList.add("is-in");
     io.unobserve(element);
     handlers.delete(element);
+    tracked.delete(element);
   };
 
-  handlers.set(element, handler);
+  // Safety net. If the element is on screen and the observer has still not
+  // fired after 1.5s — a zero-height box, a clipped ancestor, a node that
+  // mounted inside a tab after the sweep — reveal it anyway. Content must never
+  // be able to stay invisible because a box the observer cannot measure.
+  window.clearTimeout(safety);
+  safety = window.setTimeout(() => {
+    const rect = element.getBoundingClientRect();
+    const onScreen = rect.width > 0 && rect.height > 0 && rect.top < window.innerHeight && rect.bottom > 0;
+    if (onScreen) finish();
+  }, SAFETY_MS);
+
+  handlers.set(element, finish);
   io.observe(element);
 
   return () => {
+    done = true;
+    window.clearTimeout(safety);
     io.unobserve(element);
     handlers.delete(element);
+    tracked.delete(element);
+  };
+}
+
+/* --- automatic discovery --------------------------------------------------- */
+
+/**
+ * `data-reveal` opts an element into the shared observer without a ref.
+ *
+ * This is what covers nodes that appear after the first paint: a tab, a
+ * toggle, a lazy section, or the next route's content. A MutationObserver
+ * watches the document and registers whatever shows up, so a late mount can
+ * never end up stuck at its hidden start state because nothing was watching
+ * for it. Elements the React hooks already observe are skipped via `tracked`.
+ */
+const REVEAL_SELECTOR = "[data-reveal]";
+
+/**
+ * Register the `data-reveal` nodes in `node`'s subtree, skipping ones already
+ * handled — by a ref hook, by an earlier sweep, or because they are revealed.
+ * Recurses through any node type (Document, DocumentFragment, text nodes) so
+ * the initial sweep can start from `document` itself.
+ */
+function sweep(node: Node): void {
+  if (node instanceof Element) {
+    if (node.matches(REVEAL_SELECTOR) && !tracked.has(node) && !node.classList.contains("is-in")) {
+      observeReveal(node);
+    }
+    node.querySelectorAll(REVEAL_SELECTOR).forEach((el) => {
+      if (!tracked.has(el) && !el.classList.contains("is-in")) observeReveal(el);
+    });
+    return;
+  }
+  node.childNodes.forEach(sweep);
+}
+
+let autoRefs = 0;
+let autoObserver: MutationObserver | null = null;
+
+/** Mounted once, by MotionRoot. */
+export function startAutoReveal(): () => void {
+  autoRefs += 1;
+  if (autoRefs === 1) {
+    sweep(document);
+    autoObserver = new MutationObserver((records) => {
+      for (const record of records) {
+        record.addedNodes.forEach(sweep);
+      }
+    });
+    autoObserver.observe(document.documentElement, { childList: true, subtree: true });
+  }
+  return () => {
+    autoRefs -= 1;
+    if (autoRefs > 0) return;
+    autoObserver?.disconnect();
+    autoObserver = null;
   };
 }
 

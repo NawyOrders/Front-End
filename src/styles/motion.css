@@ -422,7 +422,13 @@
   transition: transform var(--dur) var(--ease), opacity var(--dur) var(--ease), filter var(--dur) var(--ease);
   transition-delay: calc(var(--i, 0) * 100ms);
 }
-/* Stacked and defocused in the middle, fanned out over .8s, 100ms apart. */
+/* Stacked and defocused in the middle, fanned out over .8s, 100ms apart.
+   The phones are never `.reveal`: this element's transform is the fan, and the
+   entrance is written as a `:not(.is-in)` start state, so the two can never
+   collide. `.is-in` arrives through `data-reveal`, which the document-wide
+   watcher in lib/motion/runtime.ts registers — and if even that never fires the
+   1.5s safety net reveals it anyway. Nothing else may set these three
+   properties, or the entrance would be cancelled before it played. */
 .fan-phone:not(.is-in) {
   transform: translate3d(0, 0, 0) scale(.86);
   opacity: 0;
@@ -505,6 +511,17 @@
    has not been revealed yet is forced visible, so nothing can be stranded at
    opacity 0. */
 @media (prefers-reduced-motion: reduce) {
+  /* The fan must still be *there* under reduced motion — only the movement goes.
+     The mobile menu and the FAQ panel open instantly instead of sliding. */
+  .fan-phone,
+  .fan-phone:not(.is-in) {
+    opacity: 1 !important;
+    filter: none !important;
+    transform:
+      translate3d(calc(var(--x, 0) * var(--dir, 1) * 1px), calc(var(--y, 0) * 1px), 0)
+      rotate(calc(var(--r, 0) * var(--dir, 1) * 1deg))
+      scale(var(--s, 1)) !important;
+  }
   .fan-float,
   .hero-float,
   .parallax,

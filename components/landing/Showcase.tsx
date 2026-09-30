@@ -34,7 +34,13 @@ const slots: Slot[] = [
 
 const Phone = memo(function Phone({ slot, i, dict, alt }: { slot: Slot; i: number; dict: Dictionary; alt: string }) {
   return (
+    /* data-reveal, not .reveal: the fan owns this element's transform and the
+       entrance is expressed through :not(.is-in), so the two can never fight.
+       The attribute is picked up by the document-wide watcher in
+       lib/motion/runtime.ts, which is why a phone that mounts inside a tab or a
+       lazy section is still revealed. */
     <div
+      data-reveal
       className={`fan-phone ${slot.z}`}
       style={vars({
         "--i": i,
@@ -66,14 +72,16 @@ export function Showcase({ dict }: { dict: Dictionary }) {
   return (
     <section id="showcase" aria-labelledby="showcase-title" className="section overflow-x-clip">
       <div className="container-x grid grid-cols-[minmax(0,1fr)] items-center gap-10 lg:grid-cols-2">
-        <div ref={columnRef} className="reveal is-cascade rv-start">
+        {/* Copy column = a plain fade (opacity only, no clip-path wipe and no
+            slide). The fan keeps its own entrance below. */}
+        <div ref={columnRef} className="reveal is-cascade rv-fade">
           <span style={stagger(0)} className="tag reveal rv-pop">
             {dict.showcase.badge}
           </span>
           <SectionTitle id="showcase-title" className="mt-4">
             {dict.showcase.titleLead} <span className="text-brand">{dict.showcase.titleAccent}</span>
           </SectionTitle>
-          <p style={stagger(1)} className="reveal rv-mask-up mt-4 max-w-md text-ink-muted">
+          <p style={stagger(1)} className="reveal rv-fade mt-4 max-w-md text-ink-muted">
             {dict.showcase.body}
           </p>
         </div>

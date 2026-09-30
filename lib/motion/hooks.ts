@@ -14,6 +14,7 @@ import {
   observeReveal,
   onFrame,
   prefersReducedMotion,
+  startAutoReveal,
   startScroll,
   trackProgress,
   wake,
@@ -53,10 +54,20 @@ export function useReveal<T extends Element = HTMLDivElement>(): RefObject<T | n
   useEffect(() => {
     const element = ref.current;
     if (!element) return;
-    return observeReveal(element, () => {});
+    return observeReveal(element);
   }, []);
 
   return ref;
+}
+
+/**
+ * Watches the document for `data-reveal` nodes and registers each one with the
+ * shared observer as it appears. Mounted once, by MotionRoot: it is what keeps
+ * content that mounts after the first paint (tabs, toggles, lazy sections, a
+ * route change) from being stuck at its hidden start state.
+ */
+export function useAutoReveal(): void {
+  useEffect(() => startAutoReveal(), []);
 }
 
 /* --- count-up ---------------------------------------------------------------- */
