@@ -21,10 +21,17 @@
 export const prefersReducedMotion = () =>
   typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/** Desktop-grade pointer: the gate for tilt, spotlight and parallax. */
+/**
+ * Desktop-grade pointer: the gate for tilt, spotlight and parallax.
+ *
+ * Two conditions, not one: a real mouse or trackpad, and the desktop tier
+ * (1024px+). Below that the cursor effects are either impossible (touch) or
+ * wasted (a scroll listener writing properties nothing reads), so the hooks
+ * never start and the CSS rules stay off.
+ */
 export const canPointFine = () =>
   typeof window !== "undefined" &&
-  window.matchMedia("(hover: hover) and (pointer: fine) and (min-width: 768px)").matches;
+  window.matchMedia("(hover: hover) and (pointer: fine) and (min-width: 1024px)").matches;
 
 export const clamp01 = (n: number) => (n < 0 ? 0 : n > 1 ? 1 : n);
 

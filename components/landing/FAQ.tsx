@@ -37,7 +37,7 @@ export function FAQ({ dict }: { dict: Dictionary }) {
   const base = useId();
 
   return (
-    <section id="faq" aria-labelledby="faq-title" className="section">
+    <section id="faq" aria-labelledby="faq-title" className="section overflow-x-clip">
       <div className="container-x max-w-3xl">
         <div data-reveal className="reveal is-cascade rv-up text-center">
           <span style={stagger(0)} className="tag reveal rv-pop">{dict.faq.badge}</span>

@@ -50,7 +50,7 @@ const ReviewCard = memo(function ReviewCard({ item, i, dict }: { item: Item; i: 
 
 export function Testimonials({ dict }: { dict: Dictionary }) {
   return (
-    <section aria-labelledby="reviews-title" className="section">
+    <section aria-labelledby="reviews-title" className="section overflow-x-clip">
       <div className="container-x">
         <div data-reveal className="reveal is-cascade rv-up text-center">
           <span style={stagger(0)} className="tag reveal rv-pop">{dict.testimonials.badge}</span>

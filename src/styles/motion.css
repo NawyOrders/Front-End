@@ -34,6 +34,13 @@
   --lap: 40s;       /* marquee lap */
   --float-dur: 5s;  /* idle phone float */
 
+  /* How far a variant travels. One number, re-declared per breakpoint in
+     section 11, so `rv-up` / `rv-start` / `rv-flip` all shorten on a phone
+     without a single call site knowing about screen size. */
+  --rv-distance: 60px;
+  --rv-blur: 14px;
+  --rv-zoom: .85;
+
   /* Written by lib/motion/scroll.ts and lib/motion/pointer.ts. Declared here
      so the fallback is always a valid value, in every engine, pre-hydration. */
   --scroll: 0; /* 0 -> 1 across the whole document */
@@ -79,19 +86,19 @@
 /* --- 3 · Variants (hidden start state only) ----------------------------- */
 /* opacity only */
 .rv-fade { transform: none; filter: none; clip-path: inset(0); }
-.rv-up { transform: translate3d(0, 40px, 0); }
-.rv-down { transform: translate3d(0, -40px, 0); }
-/* -60px enters from the reading-start side in LTR ... */
-.rv-start { transform: translate3d(-60px, 0, 0); }
+.rv-up { transform: translate3d(0, var(--rv-distance), 0); }
+.rv-down { transform: translate3d(0, calc(var(--rv-distance) * -1), 0); }
+/* One --rv-distance in from the reading-start side in LTR ... */
+.rv-start { transform: translate3d(calc(var(--rv-distance) * -1), 0, 0); }
 /* ... and from the mirrored side in RTL. */
-[dir="rtl"] .rv-start { transform: translate3d(60px, 0, 0); }
-.rv-end { transform: translate3d(60px, 0, 0); }
-[dir="rtl"] .rv-end { transform: translate3d(-60px, 0, 0); }
-.rv-zoom { transform: scale3d(.85, .85, .85); }
-.rv-zoom-out { transform: scale3d(1.15, 1.15, 1.15); filter: blur(8px); }
-.rv-blur { filter: blur(14px); transform: translate3d(0, 16px, 0); }
-.rv-rotate { transform: translate3d(0, 30px, 0) rotate(-6deg) scale3d(.94, .94, .94); }
-.rv-flip { transform: perspective(900px) translate3d(0, 30px, 0) rotateX(25deg); transform-origin: 50% 0; }
+[dir="rtl"] .rv-start { transform: translate3d(var(--rv-distance), 0, 0); }
+.rv-end { transform: translate3d(var(--rv-distance), 0, 0); }
+[dir="rtl"] .rv-end { transform: translate3d(calc(var(--rv-distance) * -1), 0, 0); }
+.rv-zoom { transform: scale3d(var(--rv-zoom), var(--rv-zoom), var(--rv-zoom)); }
+.rv-zoom-out { transform: scale3d(1.15, 1.15, 1.15); filter: blur(var(--rv-blur)); }
+.rv-blur { filter: blur(var(--rv-blur)); transform: translate3d(0, calc(var(--rv-distance) * .26), 0); }
+.rv-rotate { transform: translate3d(0, var(--rv-distance), 0) rotate(-6deg) scale3d(.94, .94, .94); transform-origin: 50% 100%; }
+.rv-flip { transform: perspective(900px) translate3d(0, calc(var(--rv-distance) * .6), 0) rotateX(25deg); transform-origin: 50% 0; }
 .rv-mask-up { clip-path: inset(100% 0 0 0); }
 /* Clipped to nothing against the reading-start edge, so the wipe travels with
    the reading direction. */
@@ -174,13 +181,23 @@
   .pressable:active { --ps: .97; }
 }
 
-/* Route change (locale switch): opacity only, so the wrapper never becomes a
-   containing block for the sticky header. */
+/* Route change (locale switch): a fade on the wrapper plus a short rise on the
+   inner element. The wrapper stays free of transform / filter on purpose — a
+   transformed ancestor would become the containing block for `position: sticky`
+   and the header would stop sticking to the viewport. 320ms, both halves. */
 @keyframes pageFade {
   from { opacity: 0; }
   to { opacity: 1; }
 }
-.page-fade { animation: pageFade .4s var(--ease) both; }
+@keyframes pageRise {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to { opacity: 1; transform: none; }
+}
+.page-fade { animation: pageFade .32s var(--ease) both; }
+.page-rise { animation: pageRise .32s var(--ease) both; }
+@media (prefers-reduced-motion: reduce) {
+  .page-fade, .page-rise { animation: none !important; opacity: 1 !important; }
+}
 
 .icon-shift { transition: translate var(--dur-fast) var(--ease); }
 @media (hover: hover) and (pointer: fine) {
@@ -396,7 +413,7 @@
 /* The hero's decorative arc drifts against the page. --p is 0 -> 1 across this
    section's travel, so the arc moves as it crosses the screen. It is anchored
    to the bottom edge, so it travels downwards and can never open a gap. */
-@media (hover: hover) and (pointer: fine) and (min-width: 768px) {
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
   .parallax { transform: translate3d(0, calc(var(--p) * var(--sp, 60) * 1px), 0); }
 }
 
@@ -555,9 +572,18 @@
   .accent-bar {
     transform: none !important;
   }
+  /* Floats, parallax, tilt, masks and flips off; nothing moves. Anything with a
+     hidden start state is forced visible, so a missing or slow `.is-in` can
+     never strand content at opacity 0. */
   .reveal,
   .reveal.is-in,
-  .is-cascade.is-in .reveal {
+  .is-cascade.is-in .reveal,
+  .wd,
+  .accent-bar {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    clip-path: none !important;
     transition-duration: .2s !important;
     transition-delay: 0s !important;
   }
@@ -567,7 +593,62 @@
 /* --- 11 · Touch and small screens --------------------------------------- */
 /* Tilt, the spotlight and the parallax transform are already behind the
    pointer media queries above; this is the belt to that pair of braces. */
-@media (hover: none), (pointer: coarse), (max-width: 767px) {
+/* --- 11 — Touch, small screens and breakpoints ------------------------- */
+/* Three tiers, one place. `--rv-distance` (and the blur / zoom that scale with
+   it) is re-declared per tier, so every variant in section 3 adapts to the
+   screen without one call site knowing the width.
+
+     mobile   320-767px   short travel, no flip / rotate / side wipe
+     tablet   768-1023px  medium travel, no pointer effects
+     desktop  1024px+     full travel + tilt, parallax, spotlight, progress
+
+   The pointer-driven effects are additionally gated on
+   `(hover: hover) and (pointer: fine)` above, so a touch laptop at desktop
+   width still gets the plain fades. */
+@media (max-width: 767px) {
+  :root {
+    --rv-distance: 24px;
+    --rv-blur: 8px;
+    --rv-zoom: .92;
+    --stagger: 70ms;
+  }
+  /* A 3D flip, a tilt or a side wipe reads as a glitch on a small screen, so
+     these four fall back to the short vertical entrance of `rv-up`. */
+  .rv-flip,
+  .rv-rotate,
+  .rv-mask-side,
+  .rv-zoom-out {
+    transform: translate3d(0, var(--rv-distance), 0);
+    filter: none;
+    clip-path: none;
+  }
+  .rv-zoom-out { filter: blur(0) !important; }
+  /* Nothing on a phone may push the page sideways. */
+  .rv-start,
+  [dir="rtl"] .rv-start,
+  .rv-end,
+  [dir="rtl"] .rv-end {
+    transform: translate3d(0, var(--rv-distance), 0);
+  }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  :root {
+    --rv-distance: 40px;
+    --rv-blur: 11px;
+    --rv-zoom: .88;
+  }
+  /* Tablet keeps the flip and the rotate — there is room for them — but no
+     pointer effect runs: the hover rules and lib/motion hooks stay off. */
   .card:hover, .lift:hover { translate: none; }
   .card:hover::after, .lift:hover::after { opacity: 0; }
+}
+/* Tilt, the spotlight and the parallax transform are already behind the
+   pointer media queries above; this is the belt to that pair of braces. */
+@media (hover: none), (pointer: coarse), (max-width: 1023px) {
+  .card:hover, .lift:hover { translate: none; }
+  .card:hover::after, .lift:hover::after { opacity: 0; }
+  .marquee:hover .marquee-track { animation-play-state: running; }
+  /* The fan's scroll-driven spread is a pointer-tier effect too: below desktop
+     the three phones simply sit in their fanned position. */
+  .fan-phone { translate: none; }
 }

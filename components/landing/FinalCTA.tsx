@@ -8,10 +8,10 @@ import { SectionTitle } from "./SectionTitle";
 
 export function FinalCTA({ dict }: { dict: Dictionary }) {
   return (
-    <section id="contact" aria-labelledby="cta-title" className="section bg-navy text-center text-white">
+    <section id="contact" aria-labelledby="cta-title" className="section overflow-x-clip bg-navy text-center text-white">
       <div className="container-x">
         <SectionTitle id="cta-title" center>{dict.cta.title}</SectionTitle>
-        <p style={stagger(1)} className="reveal rv-mask-up mx-auto mt-4 max-w-md text-white/75">{dict.cta.body}</p>
+        <p data-reveal style={stagger(1)} className="reveal rv-mask-up mx-auto mt-4 max-w-md text-white/75">{dict.cta.body}</p>
 
         {/* The card breathes very slightly while it is on screen; the shimmer
             rule below disables it under reduced motion. */}

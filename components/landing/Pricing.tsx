@@ -162,7 +162,7 @@ export function Pricing({ dict, locale }: { dict: Dictionary; locale: Locale }) 
   }, []);
 
   return (
-    <section id="pricing" aria-labelledby="pricing-title" className="section">
+    <section id="pricing" aria-labelledby="pricing-title" className="section overflow-x-clip">
       <div className="container-x">
         <div data-reveal className="reveal is-cascade rv-up text-center">
           <span style={stagger(0)} className="tag reveal rv-pop">{dict.pricing.badge}</span>
