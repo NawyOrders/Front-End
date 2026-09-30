@@ -6,6 +6,9 @@ import { getDictionary, isLocale, localeDir, localeTag, locales, type Locale } f
 import { site } from "@/lib/site";
 import { MotionRoot } from "@/components/landing/MotionRoot";
 import "../globals.css";
+// Imported after globals.css so the motion layer wins on the few selectors it
+// shares with it (.fan-stage, .card, .btn).
+import "../../src/styles/motion.css";
 
 const cairoArabic = localFont({
   src: [

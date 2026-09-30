@@ -10,7 +10,7 @@ import { Testimonials } from "@/components/landing/Testimonials";
 import { FAQ } from "@/components/landing/FAQ";
 import { FinalCTA } from "@/components/landing/FinalCTA";
 import { Footer } from "@/components/landing/Footer";
-import { getDictionary, isLocale, localeDir, type Locale } from "@/lib/i18n";
+import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { site } from "@/lib/site";
 import { notFound } from "next/navigation";
 
@@ -43,7 +43,7 @@ export default function Page({ params }: { params: { locale: string } }) {
         <Problems dict={dict} />
         <Solution dict={dict} />
         <Features dict={dict} />
-        <Showcase dict={dict} dir={localeDir[locale]} />
+        <Showcase dict={dict} />
         <Pricing dict={dict} locale={locale} />
         <Testimonials dict={dict} />
         <FAQ dict={dict} />

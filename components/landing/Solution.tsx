@@ -1,55 +1,59 @@
 "use client";
 
-import { m } from "motion/react";
+import { memo } from "react";
 import type { Dictionary } from "@/lib/i18n";
-import { blurIn, cardMotion, cardText, iconHover, popIn, shadowSoftHover, staggerContainer, viewport } from "@/lib/motion";
+import { stagger, useReveal } from "@/lib/motion/hooks";
 import { SectionTitle } from "./SectionTitle";
 
-export function Solution({ dict }: { dict: Dictionary }) {
+type Step = Dictionary["solution"]["steps"][number];
+
+const StepRow = memo(function StepRow({ step, i, dict }: { step: Step; i: number; dict: Dictionary }) {
+  const ref = useReveal<HTMLLIElement>();
+
   return (
-    <section id="how" aria-labelledby="solution-title" className="section">
-      <m.div
-        variants={staggerContainer}
-        initial="hidden"
-        whileInView="show"
-        viewport={viewport}
-        className="container-x grid grid-cols-[minmax(0,1fr)] items-center gap-10 lg:grid-cols-2"
+    <li ref={ref} style={stagger(i)} className={`is-cascade reveal ${i % 2 === 0 ? "rv-start" : "rv-end"} relative`}>
+      {/* Same tilt as the icon tiles, so the number reacts to the step. */}
+      <span
+        style={stagger(1)}
+        className="reveal rv-pop icon-tilt absolute -start-[calc(2rem+17px)] top-0 grid size-8 place-items-center rounded-full bg-brand text-sm font-extrabold text-white shadow-cta"
+        aria-hidden="true"
       >
-        <m.div variants={staggerContainer}>
-          <m.span className="tag" variants={popIn}>{dict.solution.badge}</m.span>
+        {i + 1}
+      </span>
+      <h3 style={stagger(1)} className="reveal rv-fade text-xl font-extrabold text-navy">
+        <span className="sr-only">{dict.solution.stepPrefix.replace("{n}", String(i + 1))}</span>
+        {step.title}
+      </h3>
+      <p style={stagger(2)} className="reveal rv-mask-up mt-1 max-w-sm text-sm text-ink-muted">
+        {step.text}
+      </p>
+    </li>
+  );
+});
+
+export function Solution({ dict }: { dict: Dictionary }) {
+  const columnRef = useReveal<HTMLDivElement>();
+
+  return (
+    <section id="how" aria-labelledby="solution-title" className="section overflow-x-clip">
+      <div className="container-x grid grid-cols-[minmax(0,1fr)] items-center gap-10 lg:grid-cols-2">
+        <div ref={columnRef} className="reveal is-cascade rv-start">
+          <span style={stagger(0)} className="tag reveal rv-pop">
+            {dict.solution.badge}
+          </span>
           <SectionTitle id="solution-title" className="mt-4">
             {dict.solution.titleLead} <span className="text-brand">{dict.solution.titleAccent}</span> {dict.solution.titleTail}
           </SectionTitle>
-          <m.p className="mt-4 max-w-md text-ink-muted" variants={blurIn}>{dict.solution.body}</m.p>
-        </m.div>
-        <m.ol className="relative space-y-6 border-s-2 border-brand/30 ps-8">
+          <p style={stagger(1)} className="reveal rv-mask-up mt-4 max-w-md text-ink-muted">
+            {dict.solution.body}
+          </p>
+        </div>
+        <ol className="relative space-y-6 border-s-2 border-brand/30 ps-8">
           {dict.solution.steps.map((s, i) => (
-            <m.li
-              key={s.title}
-              variants={cardMotion(shadowSoftHover, 0.07, i * 0.12)}
-              initial="hidden"
-              whileInView="show"
-              whileHover="hover"
-              whileTap="tap"
-              viewport={viewport}
-              className="relative"
-            >
-              {/* Same tilt as the icon tiles, so the number reacts to the step. */}
-              <m.span
-                variants={iconHover}
-                className="absolute -start-[calc(2rem+17px)] top-0 grid size-8 place-items-center rounded-full bg-brand text-sm font-extrabold text-white shadow-cta"
-                aria-hidden="true"
-              >
-                {i + 1}
-              </m.span>
-              <m.h3 variants={cardText} className="text-xl font-extrabold text-navy">
-                <span className="sr-only">{dict.solution.stepPrefix.replace("{n}", String(i + 1))}</span>{s.title}
-              </m.h3>
-              <m.p variants={cardText} className="mt-1 max-w-sm text-sm text-ink-muted">{s.text}</m.p>
-            </m.li>
+            <StepRow key={s.title} step={s} i={i} dict={dict} />
           ))}
-        </m.ol>
-      </m.div>
+        </ol>
+      </div>
     </section>
   );
 }

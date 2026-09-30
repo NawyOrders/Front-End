@@ -1,8 +1,7 @@
 "use client";
 
-import { m } from "motion/react";
 import type { Dictionary } from "@/lib/i18n";
-import { cardText, pressable, spring, stagger, staggerContainer, viewport } from "@/lib/motion";
+import { stagger, useReveal } from "@/lib/motion/hooks";
 import { Logo } from "./Logo";
 import { MLink } from "./MLink";
 
@@ -14,46 +13,48 @@ const socials: { key: keyof Dictionary["footer"]["social"]; d: string }[] = [
 ];
 
 export function Footer({ dict }: { dict: Dictionary }) {
+  const footRef = useReveal<HTMLElement>();
+  const topRef = useReveal<HTMLDivElement>();
+  const bottomRef = useReveal<HTMLDivElement>();
+
   return (
-    <m.footer variants={staggerContainer} initial="hidden" whileInView="show" viewport={viewport} className="border-t border-line bg-cream-100 pt-16">
-      <m.div variants={stagger(0.1, 0)} className="container-x grid gap-12 pb-12 md:grid-cols-[1.4fr_repeat(3,1fr)]">
-        <m.div variants={cardText}>
+    <footer ref={footRef} className="reveal rv-fade border-t border-line bg-cream-100 pt-16">
+      <div ref={topRef} className="is-cascade container-x grid gap-12 pb-12 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+        <div>
           <Logo dict={dict} />
-          <m.p className="mt-4 max-w-xs text-sm text-ink-muted">{dict.footer.tagline}</m.p>
-        </m.div>
-        {dict.footer.columns.map((c) => (
-          <m.nav key={c.title} variants={cardText} aria-label={c.title}>
+          <p style={stagger(1)} className="reveal rv-fade mt-4 max-w-xs text-sm text-ink-muted">{dict.footer.tagline}</p>
+        </div>
+        {dict.footer.columns.map((c, n) => (
+          <nav key={c.title} style={stagger(1 + n)} aria-label={c.title} className="reveal rv-fade">
             <h2 className="text-base font-extrabold text-navy">{c.title}</h2>
-            <m.ul variants={stagger(0.04, 0.1)} className="mt-4 space-y-2 text-sm text-ink-muted">
-              {c.links.map((l) => (
-                <m.li key={l} variants={cardText}>
-                  <MLink href="#top" {...pressable} className="hover:text-brand">{l}</MLink>
-                </m.li>
+            <ul className="mt-4 space-y-2 text-sm text-ink-muted">
+              {c.links.map((l, k) => (
+                <li key={l} style={stagger(2 + k)} className="reveal rv-fade">
+                  <MLink href="#top" className="hover:text-brand">{l}</MLink>
+                </li>
               ))}
-            </m.ul>
-          </m.nav>
+            </ul>
+          </nav>
         ))}
-      </m.div>
-      <m.div variants={cardText} className="border-t border-line py-6">
+      </div>
+      <div ref={bottomRef} className="reveal is-cascade rv-fade border-t border-line py-6">
         <div className="container-x flex flex-col items-center justify-between gap-4 sm:flex-row">
           <p className="text-xs text-ink-muted">{dict.footer.copyright.replace("{name}", dict.brand.name)}</p>
-          <m.ul variants={stagger(0.05, 0.15)} className="flex gap-2">
-            {socials.map((s) => (
-              <m.li key={s.key} variants={cardText}>
-                <m.a
+          <ul className="flex gap-2">
+            {socials.map((s, i) => (
+              <li key={s.key} style={stagger(i)} className="reveal rv-pop">
+                <a
                   href="#top"
                   aria-label={dict.footer.social[s.key]}
-                  whileHover={{ y: -3, rotate: 6, transition: spring }}
-                  whileTap={{ scale: 0.92 }}
-                  className="grid size-10 place-items-center rounded-full bg-navy text-white transition hover:bg-brand"
+                  className="pressable grid size-10 place-items-center rounded-full bg-navy text-white transition-colors hover:bg-brand"
                 >
                   <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true"><path d={s.d} fill="currentColor" /></svg>
-                </m.a>
-              </m.li>
+                </a>
+              </li>
             ))}
-          </m.ul>
+          </ul>
         </div>
-      </m.div>
-    </m.footer>
+      </div>
+    </footer>
   );
 }

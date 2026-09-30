@@ -2,10 +2,8 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { m } from "motion/react";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { localeLabel, otherLocale } from "@/lib/i18n/config";
-import { globeSpin, pressableVariants } from "@/lib/motion";
 import { Icon } from "./Icon";
 import { MLink } from "./MLink";
 
@@ -34,15 +32,12 @@ export function LanguageSwitcher({ dict, locale, className = "" }: { dict: Dicti
       hrefLang={target}
       prefetch={false}
       aria-label={dict.nav.switchLabel}
-      variants={pressableVariants}
-      initial="rest"
-      whileHover="hover"
-      whileTap="tap"
       className={`inline-flex min-h-10 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold leading-6 text-navy transition hover:bg-navy/5 hover:text-brand ${className}`}
     >
-      <m.span variants={globeSpin} className="flex shrink-0">
-        <Icon name="globe" className="size-4" />
-      </m.span>
+      {/* The globe turns once on hover. */}
+      <span className="group/globe flex shrink-0">
+        <Icon name="globe" className="size-4 motion-safe:transition-transform motion-safe:duration-700 group-hover/globe:rotate-[360deg]" />
+      </span>
       <span>{localeLabel[target]}</span>
     </MLink>
   );

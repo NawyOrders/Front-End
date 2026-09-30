@@ -1,13 +1,12 @@
 "use client";
 
-import { m } from "motion/react";
-import type { ReactNode } from "react";
-import { accentGrow, fadeUp } from "@/lib/motion";
+import { useReveal } from "@/lib/motion/hooks";
+import { HeadlineWords } from "./HeadlineWords";
 
 /* Every section title keeps the existing `.h-section` type and gains a small
-   brand bar that grows from 0. The bar is absolutely positioned, so it adds
-   no spacing, and it centres with `mx-auto` rather than a transform, which
-   motion would overwrite. */
+   brand bar that draws itself in with scaleX (it used to animate `width`).
+   The bar is absolutely positioned, so it adds no spacing, and it centres with
+   `mx-auto` rather than a transform, which the reveal owns. */
 export function SectionTitle({
   id,
   center = false,
@@ -17,16 +16,20 @@ export function SectionTitle({
   id: string;
   center?: boolean;
   className?: string;
-  children: ReactNode;
+  children: React.ReactNode;
 }) {
+  const ref = useReveal<HTMLHeadingElement>();
+
+  /* The ref sits on the h2 itself: the words and the bar cascade from one
+     observer entry, and the heading stays a heading. */
   return (
-    <m.h2 id={id} className={`h-section relative ${className}`} variants={fadeUp}>
-      {children}
-      <m.span
+    <h2 id={id} ref={ref} className={`h-section is-cascade relative ${className}`}>
+      <HeadlineWords>{children}</HeadlineWords>
+      <span
         aria-hidden="true"
-        className={`absolute h-[3px] w-0 rounded-full bg-brand ${center ? "inset-x-0 -bottom-2 mx-auto" : "-bottom-2 start-0"}`}
-        variants={accentGrow}
+        data-center={center ? "true" : "false"}
+        className={`accent-bar absolute h-[3px] rounded-full bg-brand ${center ? "inset-x-0 -bottom-2 mx-auto" : "-bottom-2 start-0"}`}
       />
-    </m.h2>
+    </h2>
   );
 }

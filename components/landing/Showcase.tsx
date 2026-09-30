@@ -1,9 +1,8 @@
 "use client";
 
-import { m } from "motion/react";
-import type { Variants } from "motion/react";
+import { memo } from "react";
 import type { Dictionary } from "@/lib/i18n";
-import { EASE_OUT, fadeUp, floatLoop, popIn, spring, staggerContainer, viewport } from "@/lib/motion";
+import { stagger, useMouseTilt, useParallax, useReveal, vars } from "@/lib/motion/hooks";
 import { PhoneMockup } from "./PhoneMockup";
 import { SectionTitle } from "./SectionTitle";
 
@@ -14,74 +13,80 @@ type Slot = {
   y: number;
   rotate: number;
   scale: number;
-  delay: number;
-  float: number;
+  /** Tilt parallax depth: the back phone leans further than the front one. */
+  depth: number;
+  /** Idle float: one duration, delay, distance and wobble per phone. */
+  float: { duration: string; delay: string; distance: string; wobble: string };
   tone: "warm" | "cool";
 };
 
-/* The fan lives here rather than in CSS custom properties: every phone starts
-   stacked at the centre of the stage and spreads to these offsets. `sign`
-   mirrors x/rotate for RTL so both locales show the same picture. The stage
-   itself is still scaled as a single unit by .fan-viewport, which is what keeps all
-   three phones on screen down to 320px with no horizontal scroll. */
+/* The fan lives here rather than in CSS custom properties because every phone
+   starts stacked in the middle of the stage and spreads to these offsets. The
+   stage is still scaled as a single unit by .fan-viewport, which is what keeps
+   all three phones on screen down to 320px with no horizontal scroll, and the
+   RTL mirror is a single `--dir` flip in the stylesheet, so both locales show
+   the same picture. */
 const slots: Slot[] = [
-  { id: "front", z: "z-30", x: 0, y: 0, rotate: 0, scale: 1, delay: 0, float: 0, tone: "warm" },
-  { id: "mid", z: "z-20", x: -120, y: 16, rotate: -8, scale: 0.94, delay: 0.1, float: 1.4, tone: "cool" },
-  { id: "back", z: "z-10", x: 120, y: 16, rotate: 8, scale: 0.88, delay: 0.2, float: 2.8, tone: "cool" },
+  { id: "front", z: "z-30", x: 0, y: 0, rotate: 0, scale: 1, depth: 0.35, float: { duration: "4.6s", delay: "0s", distance: "-10px", wobble: ".4deg" }, tone: "warm" },
+  { id: "mid", z: "z-20", x: -120, y: 16, rotate: -8, scale: 0.94, depth: 0.8, float: { duration: "5.6s", delay: "-1.4s", distance: "-8px", wobble: "-.6deg" }, tone: "cool" },
+  { id: "back", z: "z-10", x: 120, y: 16, rotate: 8, scale: 0.88, depth: 1.25, float: { duration: "6.4s", delay: "-2.8s", distance: "-12px", wobble: ".8deg" }, tone: "cool" },
 ];
 
-/* `hover` is a label, so the whole section (which is a variant child of
-   nothing above it) hands it to all three phones when the pointer is over the
-   stage: they straighten, lift and spread a little wider. */
-const phone = (s: Slot, sign: number): Variants => ({
-  hidden: { opacity: 0, x: 0, y: 0, rotate: 0, scale: 0.92 },
-  show: {
-    opacity: 1,
-    x: s.x * sign,
-    y: s.y,
-    rotate: s.rotate * sign,
-    scale: s.scale,
-    transition: { duration: 0.9, ease: EASE_OUT, delay: s.delay },
-  },
-  hover: {
-    y: s.y - 8,
-    rotate: 0,
-    scale: s.scale * 1.04,
-    transition: spring,
-  },
+const Phone = memo(function Phone({ slot, i, dict, alt }: { slot: Slot; i: number; dict: Dictionary; alt: string }) {
+  return (
+    <div
+      className={`fan-phone ${slot.z}`}
+      style={vars({
+        "--i": i,
+        "--x": slot.x,
+        "--y": slot.y,
+        "--r": slot.rotate,
+        "--s": slot.scale,
+        "--d": slot.depth,
+        "--float-dur": slot.float.duration,
+        "--fdelay": slot.float.delay,
+        "--fy": slot.float.distance,
+        "--fw": slot.float.wobble,
+      })}
+    >
+      <div className="fan-float">
+        <PhoneMockup dict={dict} alt={alt} tone={slot.tone} />
+      </div>
+    </div>
+  );
 });
 
-export function Showcase({ dict, dir }: { dict: Dictionary; dir: "rtl" | "ltr" }) {
-  const sign = dir === "rtl" ? -1 : 1;
+export function Showcase({ dict }: { dict: Dictionary }) {
+  const columnRef = useReveal<HTMLDivElement>();
+  /* --rx / --ry (cursor tilt) are inherited by every phone; --p (the fan's own
+     scroll progress) lives on the stage and opens the spread a little wider. */
+  const tiltRef = useMouseTilt<HTMLDivElement>(9);
+  const fanRef = useParallax<HTMLDivElement>();
+
   return (
     <section id="showcase" aria-labelledby="showcase-title" className="section overflow-x-clip">
-      <m.div
-        variants={staggerContainer}
-        initial="hidden"
-        whileInView="show"
-        whileHover="hover"
-        viewport={viewport}
-        className="container-x grid grid-cols-[minmax(0,1fr)] items-center gap-10 lg:grid-cols-2"
-      >
-        <m.div variants={staggerContainer}>
-          <m.span className="tag" variants={popIn}>{dict.showcase.badge}</m.span>
+      <div className="container-x grid grid-cols-[minmax(0,1fr)] items-center gap-10 lg:grid-cols-2">
+        <div ref={columnRef} className="reveal is-cascade rv-start">
+          <span style={stagger(0)} className="tag reveal rv-pop">
+            {dict.showcase.badge}
+          </span>
           <SectionTitle id="showcase-title" className="mt-4">
             {dict.showcase.titleLead} <span className="text-brand">{dict.showcase.titleAccent}</span>
           </SectionTitle>
-          <m.p className="mt-4 max-w-md text-ink-muted" variants={fadeUp}>{dict.showcase.body}</m.p>
-        </m.div>
-        <m.div variants={staggerContainer} className="fan-viewport relative mt-4 w-full">
-          <div className="fan-stage">
-            {slots.map((s) => (
-              <m.div key={s.id} className={`fan-phone ${s.z}`} variants={phone(s, sign)}>
-                <m.div animate={floatLoop(s.float)}>
-                  <PhoneMockup dict={dict} alt={dict.showcase.mockupAlt} tone={s.tone} />
-                </m.div>
-              </m.div>
-            ))}
+          <p style={stagger(1)} className="reveal rv-mask-up mt-4 max-w-md text-ink-muted">
+            {dict.showcase.body}
+          </p>
+        </div>
+        <div ref={tiltRef} className="mt-4 w-full">
+          <div ref={fanRef} className="fan-viewport relative">
+            <div className="fan-stage">
+              {slots.map((slot, i) => (
+                <Phone key={slot.id} slot={slot} i={i} dict={dict} alt={dict.showcase.mockupAlt} />
+              ))}
+            </div>
           </div>
-        </m.div>
-      </m.div>
+        </div>
+      </div>
     </section>
   );
 }
