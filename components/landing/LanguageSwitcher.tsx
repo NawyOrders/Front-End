@@ -34,9 +34,10 @@ export function LanguageSwitcher({ dict, locale, className = "" }: { dict: Dicti
       aria-label={dict.nav.switchLabel}
       className={`inline-flex min-h-10 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold leading-6 text-navy transition hover:bg-navy/5 hover:text-brand ${className}`}
     >
-      {/* The globe turns once on hover. */}
+      {/* The globe draws its own stroke with the header reveal, then turns once
+          on hover. */}
       <span className="group/globe flex shrink-0">
-        <Icon name="globe" className="size-4 motion-safe:transition-transform motion-safe:duration-700 group-hover/globe:rotate-[360deg]" />
+        <Icon name="globe" className="icon-draw size-4 motion-safe:transition-transform motion-safe:duration-700 group-hover/globe:rotate-[360deg]" />
       </span>
       <span>{localeLabel[target]}</span>
     </MLink>

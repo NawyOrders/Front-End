@@ -2,16 +2,14 @@
 
 import { memo, useId, useState } from "react";
 import type { Dictionary } from "@/lib/i18n";
-import { stagger, useReveal } from "@/lib/motion/hooks";
+import { stagger } from "@/lib/motion/hooks";
 import { SectionTitle } from "./SectionTitle";
 
 type Item = Dictionary["faq"]["items"][number];
 
 const FaqItem = memo(function FaqItem({ item, i, open, onToggle, ids }: { item: Item; i: number; open: boolean; onToggle: () => void; ids: { button: string; panel: string } }) {
-  const ref = useReveal<HTMLLIElement>();
-
   return (
-    <li ref={ref} data-open={open ? "true" : "false"} style={stagger(i)} className="card acc-item reveal rv-up overflow-hidden">
+    <li data-reveal data-open={open ? "true" : "false"} style={stagger(i)} className="card acc-item reveal rv-up overflow-hidden">
       <h3>
         <button id={ids.button} type="button" aria-expanded={open} aria-controls={ids.panel} onClick={onToggle}
           className="pressable flex min-h-14 w-full items-center justify-between gap-4 px-5 py-3 text-start text-sm font-bold leading-6 text-navy sm:text-base">
@@ -37,12 +35,11 @@ const FaqItem = memo(function FaqItem({ item, i, open, onToggle, ids }: { item: 
 export function FAQ({ dict }: { dict: Dictionary }) {
   const [open, setOpen] = useState<number | null>(0);
   const base = useId();
-  const headRef = useReveal<HTMLDivElement>();
 
   return (
     <section id="faq" aria-labelledby="faq-title" className="section">
       <div className="container-x max-w-3xl">
-        <div ref={headRef} className="reveal is-cascade rv-up text-center">
+        <div data-reveal className="reveal is-cascade rv-up text-center">
           <span style={stagger(0)} className="tag reveal rv-pop">{dict.faq.badge}</span>
           <SectionTitle id="faq-title" center className="mt-4">{dict.faq.title}</SectionTitle>
           <p style={stagger(1)} className="reveal rv-mask-up mt-4 text-ink-muted">{dict.faq.body}</p>

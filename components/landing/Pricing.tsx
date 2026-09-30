@@ -3,7 +3,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { localeDir, localeNumber } from "@/lib/i18n/config";
-import { cardStagger, stagger, useReveal, useSlidingIndicator, vars } from "@/lib/motion/hooks";
+import { cardStagger, stagger, useSlidingIndicator, vars } from "@/lib/motion/hooks";
 import { prefersReducedMotion } from "@/lib/motion/runtime";
 import { Icon } from "./Icon";
 import { MLink } from "./MLink";
@@ -15,9 +15,9 @@ type Plan = Dictionary["pricing"]["plans"][number];
    card-heavy sections do not look like the same animation twice. */
 const CARD_VARIANTS = ["rv-up", "rv-zoom", "rv-flip"] as const;
 
-/* One card = one observer. Below lg the row is a swipe track, so a card that is
-   off to the side has not been revealed yet and slides in as it is scrolled to
-   — exactly what the carousel should do. */
+/* One card = one `data-reveal` target. Below lg the row is a swipe track, so a
+   card that is off to the side has not been revealed yet and slides in as it is
+   scrolled to — exactly what the carousel should do. */
 const PlanCard = memo(function PlanCard({
   plan,
   i,
@@ -31,13 +31,12 @@ const PlanCard = memo(function PlanCard({
   fmt: Intl.NumberFormat;
   dict: Dictionary;
 }) {
-  const ref = useReveal<HTMLLIElement>();
   /* The button has to land after the last feature line, whatever this plan has. */
   const rows = 5 + plan.features.length + (plan.disabledFeatures?.length ?? 0);
 
   return (
     <li
-      ref={ref}
+      data-reveal
       style={cardStagger(i)}
       className={`lift is-cascade reveal ${CARD_VARIANTS[i % CARD_VARIANTS.length]} relative flex w-[86%] max-w-sm shrink-0 snap-center flex-col rounded-card border bg-white p-6 lg:w-auto lg:max-w-none lg:shrink ${
         plan.featured ? "border-brand shadow-pop lg:-my-4 lg:py-10" : "border-line shadow-card"
@@ -98,7 +97,6 @@ export function Pricing({ dict, locale }: { dict: Dictionary; locale: Locale }) 
   const [active, setActive] = useState(-1);
   const trackRef = useRef<HTMLUListElement>(null);
   const frameRef = useRef(0);
-  const headRef = useReveal<HTMLDivElement>();
   const segRef = useSlidingIndicator<HTMLDivElement>();
 
   /* Memoised so the memoised cards are not handed a new formatter each render. */
@@ -166,7 +164,7 @@ export function Pricing({ dict, locale }: { dict: Dictionary; locale: Locale }) 
   return (
     <section id="pricing" aria-labelledby="pricing-title" className="section">
       <div className="container-x">
-        <div ref={headRef} className="reveal is-cascade rv-up text-center">
+        <div data-reveal className="reveal is-cascade rv-up text-center">
           <span style={stagger(0)} className="tag reveal rv-pop">{dict.pricing.badge}</span>
           <SectionTitle id="pricing-title" center className="mt-4">{dict.pricing.title}</SectionTitle>
           <p style={stagger(1)} className="reveal rv-mask-up mx-auto mt-4 max-w-md text-ink-muted">{dict.pricing.body}</p>

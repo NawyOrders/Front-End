@@ -1,6 +1,5 @@
 "use client";
 
-import { useReveal } from "@/lib/motion/hooks";
 import { HeadlineWords } from "./HeadlineWords";
 
 /* Every section title keeps the existing `.h-section` type and gains a small
@@ -18,12 +17,10 @@ export function SectionTitle({
   className?: string;
   children: React.ReactNode;
 }) {
-  const ref = useReveal<HTMLHeadingElement>();
-
-  /* The ref sits on the h2 itself: the words and the bar cascade from one
-     observer entry, and the heading stays a heading. */
+  /* `data-reveal` sits on the h2 itself: one observer entry lets the words and
+     the bar cascade out of it, and the heading stays a heading. */
   return (
-    <h2 id={id} ref={ref} className={`h-section is-cascade relative ${className}`}>
+    <h2 id={id} data-reveal className={`h-section is-cascade relative ${className}`}>
       <HeadlineWords>{children}</HeadlineWords>
       <span
         aria-hidden="true"

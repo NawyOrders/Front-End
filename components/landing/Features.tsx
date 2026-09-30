@@ -2,7 +2,7 @@
 
 import { memo } from "react";
 import type { Dictionary } from "@/lib/i18n";
-import { stagger, useReveal } from "@/lib/motion/hooks";
+import { stagger } from "@/lib/motion/hooks";
 import { Icon } from "./Icon";
 import { SectionTitle } from "./SectionTitle";
 
@@ -14,10 +14,8 @@ type Item = Dictionary["features"]["items"][number];
 const GRID_VARIANTS = ["rv-flip", "rv-rotate", "rv-zoom"] as const;
 
 const FeatureCard = memo(function FeatureCard({ item, i }: { item: Item; i: number }) {
-  const ref = useReveal<HTMLLIElement>();
-
   return (
-    <li ref={ref} style={stagger(i)} className={`card lift is-cascade reveal ${GRID_VARIANTS[i % GRID_VARIANTS.length]} p-5`}>
+    <li data-reveal style={stagger(i)} className={`card lift is-cascade reveal ${GRID_VARIANTS[i % GRID_VARIANTS.length]} p-5`}>
       <span style={stagger(1)} className="reveal rv-zoom icon-tilt grid size-11 place-items-center rounded-xl bg-navy text-brand">
         <Icon name={item.icon} className="icon-draw size-5" />
       </span>
@@ -32,13 +30,11 @@ const FeatureCard = memo(function FeatureCard({ item, i }: { item: Item; i: numb
 });
 
 export function Features({ dict }: { dict: Dictionary }) {
-  const panelRef = useReveal<HTMLDivElement>();
-
   return (
     <section id="features" aria-labelledby="features-title" className="section overflow-x-clip">
       <div className="container-x grid grid-cols-[minmax(0,1fr)] items-center gap-10 lg:grid-cols-2">
         <div
-          ref={panelRef}
+          data-reveal
           className="reveal is-cascade rv-start rounded-[2.5rem] rounded-ss-[6rem] bg-navy p-8 text-white shadow-pop sm:p-12 lg:order-1"
         >
           <span

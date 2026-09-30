@@ -2,7 +2,7 @@
 
 import { memo } from "react";
 import type { Dictionary } from "@/lib/i18n";
-import { stagger, useMouseTilt, useParallax, useReveal, vars } from "@/lib/motion/hooks";
+import { stagger, useMouseTilt, useParallax, vars } from "@/lib/motion/hooks";
 import { PhoneMockup } from "./PhoneMockup";
 import { SectionTitle } from "./SectionTitle";
 
@@ -63,7 +63,6 @@ const Phone = memo(function Phone({ slot, i, dict, alt }: { slot: Slot; i: numbe
 });
 
 export function Showcase({ dict }: { dict: Dictionary }) {
-  const columnRef = useReveal<HTMLDivElement>();
   /* --rx / --ry (cursor tilt) are inherited by every phone; --p (the fan's own
      scroll progress) lives on the stage and opens the spread a little wider. */
   const tiltRef = useMouseTilt<HTMLDivElement>(9);
@@ -74,7 +73,7 @@ export function Showcase({ dict }: { dict: Dictionary }) {
       <div className="container-x grid grid-cols-[minmax(0,1fr)] items-center gap-10 lg:grid-cols-2">
         {/* Copy column = a plain fade (opacity only, no clip-path wipe and no
             slide). The fan keeps its own entrance below. */}
-        <div ref={columnRef} className="reveal is-cascade rv-fade">
+        <div data-reveal className="reveal is-cascade rv-fade">
           <span style={stagger(0)} className="tag reveal rv-pop">
             {dict.showcase.badge}
           </span>

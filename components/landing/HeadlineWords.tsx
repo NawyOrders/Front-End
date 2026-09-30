@@ -1,7 +1,7 @@
 "use client";
 
 import { Children, Fragment, isValidElement, memo, type ReactNode } from "react";
-import { stagger, useReveal } from "@/lib/motion/hooks";
+import { stagger } from "@/lib/motion/hooks";
 import { splitWords } from "@/lib/motion/runtime";
 
 /**
@@ -20,8 +20,8 @@ import { splitWords } from "@/lib/motion/runtime";
  * break the joins between characters. Spaces are emitted as plain text nodes
  * between the words, so line breaking and shaping behave exactly as before.
  *
- * One observer entry reveals the whole headline: the wrapper gets `.is-in` and
- * `.is-cascade` hands the end state to every word.
+ * One observer entry reveals the whole headline: the wrapper carries
+ * `data-reveal` and `.is-cascade` hands the end state to every word.
  */
 
 type Counter = { i: number };
@@ -81,6 +81,5 @@ const renderNodes = (nodes: ReactNode, accent: boolean, counter: Counter): React
   });
 
 export const HeadlineWords = memo(function HeadlineWords({ children }: { children: ReactNode }) {
-  const ref = useReveal<HTMLSpanElement>();
-  return <span ref={ref} className="is-cascade">{renderNodes(children, false, { i: 0 })}</span>;
+  return <span data-reveal className="is-cascade">{renderNodes(children, false, { i: 0 })}</span>;
 });

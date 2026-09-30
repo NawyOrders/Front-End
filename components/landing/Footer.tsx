@@ -1,7 +1,7 @@
 "use client";
 
 import type { Dictionary } from "@/lib/i18n";
-import { stagger, useReveal } from "@/lib/motion/hooks";
+import { stagger } from "@/lib/motion/hooks";
 import { Logo } from "./Logo";
 import { MLink } from "./MLink";
 
@@ -13,13 +13,9 @@ const socials: { key: keyof Dictionary["footer"]["social"]; d: string }[] = [
 ];
 
 export function Footer({ dict }: { dict: Dictionary }) {
-  const footRef = useReveal<HTMLElement>();
-  const topRef = useReveal<HTMLDivElement>();
-  const bottomRef = useReveal<HTMLDivElement>();
-
   return (
-    <footer ref={footRef} className="reveal rv-fade border-t border-line bg-cream-100 pt-16">
-      <div ref={topRef} className="is-cascade container-x grid gap-12 pb-12 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+    <footer data-reveal className="reveal rv-fade border-t border-line bg-cream-100 pt-16">
+      <div data-reveal className="is-cascade container-x grid gap-12 pb-12 md:grid-cols-[1.4fr_repeat(3,1fr)]">
         <div>
           <Logo dict={dict} />
           <p style={stagger(1)} className="reveal rv-fade mt-4 max-w-xs text-sm text-ink-muted">{dict.footer.tagline}</p>
@@ -37,7 +33,7 @@ export function Footer({ dict }: { dict: Dictionary }) {
           </nav>
         ))}
       </div>
-      <div ref={bottomRef} className="reveal is-cascade rv-fade border-t border-line py-6">
+      <div data-reveal className="reveal is-cascade rv-fade border-t border-line py-6">
         <div className="container-x flex flex-col items-center justify-between gap-4 sm:flex-row">
           <p className="text-xs text-ink-muted">{dict.footer.copyright.replace("{name}", dict.brand.name)}</p>
           <ul className="flex gap-2">

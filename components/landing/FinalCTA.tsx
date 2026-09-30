@@ -2,13 +2,11 @@
 
 import type { Dictionary } from "@/lib/i18n";
 import { site } from "@/lib/site";
-import { stagger, useReveal } from "@/lib/motion/hooks";
+import { stagger } from "@/lib/motion/hooks";
 import { Icon } from "./Icon";
 import { SectionTitle } from "./SectionTitle";
 
 export function FinalCTA({ dict }: { dict: Dictionary }) {
-  const cardRef = useReveal<HTMLDivElement>();
-
   return (
     <section id="contact" aria-labelledby="cta-title" className="section bg-navy text-center text-white">
       <div className="container-x">
@@ -17,7 +15,7 @@ export function FinalCTA({ dict }: { dict: Dictionary }) {
 
         {/* The card breathes very slightly while it is on screen; the shimmer
             rule below disables it under reduced motion. */}
-        <div ref={cardRef} style={stagger(2)} className="reveal rv-zoom mx-auto mt-10 w-fit">
+        <div data-reveal style={stagger(2)} className="reveal rv-zoom mx-auto mt-10 w-fit">
           <div className="breathe flex w-fit flex-col items-center gap-4 rounded-card bg-white p-5 shadow-cta">
             {/* Square, unrounded, on white: a QR needs its quiet zone and a light
                 background to stay scannable. Keep the generated file in sync via `npm run qr`. */}

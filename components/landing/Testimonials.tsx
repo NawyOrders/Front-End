@@ -2,7 +2,7 @@
 
 import { memo } from "react";
 import type { Dictionary } from "@/lib/i18n";
-import { stagger, useReveal } from "@/lib/motion/hooks";
+import { stagger } from "@/lib/motion/hooks";
 import { SectionTitle } from "./SectionTitle";
 
 type Item = Dictionary["testimonials"]["items"][number];
@@ -12,10 +12,8 @@ const CARD_VARIANTS = ["rv-flip", "rv-rotate", "rv-zoom"] as const;
 /* The stars pop in one after another. role="img" + aria-label keeps the rating
    announced once, so the individual icons stay aria-hidden. */
 const Stars = memo(function Stars({ n, label }: { n: number; label: string }) {
-  const ref = useReveal<HTMLParagraphElement>();
-
   return (
-    <p ref={ref} role="img" aria-label={label} className="is-cascade flex gap-0.5 text-brand">
+    <p data-reveal role="img" aria-label={label} className="is-cascade flex gap-0.5 text-brand">
       {Array.from({ length: n }, (_, i) => (
         <span key={i} style={stagger(i)} className="reveal rv-pop block">
           <svg viewBox="0 0 20 20" className="size-4" aria-hidden="true">
@@ -28,10 +26,8 @@ const Stars = memo(function Stars({ n, label }: { n: number; label: string }) {
 });
 
 const ReviewCard = memo(function ReviewCard({ item, i, dict }: { item: Item; i: number; dict: Dictionary }) {
-  const ref = useReveal<HTMLLIElement>();
-
   return (
-    <li ref={ref} style={stagger(i)} className={`lift reveal ${CARD_VARIANTS[i % CARD_VARIANTS.length]}`}>
+    <li data-reveal style={stagger(i)} className={`lift reveal ${CARD_VARIANTS[i % CARD_VARIANTS.length]}`}>
       <article className="flex h-full flex-col rounded-card border border-line bg-cream-200/60 p-6">
         <Stars n={item.rating} label={dict.testimonials.starsLabel.replace("{n}", String(item.rating))} />
         <blockquote className="mt-3 flex-1 text-sm text-navy">{item.quote}</blockquote>
@@ -53,12 +49,10 @@ const ReviewCard = memo(function ReviewCard({ item, i, dict }: { item: Item; i: 
 });
 
 export function Testimonials({ dict }: { dict: Dictionary }) {
-  const headRef = useReveal<HTMLDivElement>();
-
   return (
     <section aria-labelledby="reviews-title" className="section">
       <div className="container-x">
-        <div ref={headRef} className="reveal is-cascade rv-up text-center">
+        <div data-reveal className="reveal is-cascade rv-up text-center">
           <span style={stagger(0)} className="tag reveal rv-pop">{dict.testimonials.badge}</span>
           <SectionTitle id="reviews-title" center className="mt-4">{dict.testimonials.title}</SectionTitle>
           <p style={stagger(1)} className="reveal rv-mask-up mt-4 text-ink-muted">{dict.testimonials.body}</p>

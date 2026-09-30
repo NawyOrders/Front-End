@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { site } from "@/lib/site";
-import { stagger, usePresence, useReveal } from "@/lib/motion/hooks";
+import { stagger, usePresence, vars } from "@/lib/motion/hooks";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { Logo } from "./Logo";
 import { MLink } from "./MLink";
@@ -23,7 +23,6 @@ const links = (nav: Dictionary["nav"]) => [
 export function Navbar({ dict, locale }: { dict: Dictionary; locale: Locale }) {
   const [open, setOpen] = useState(false);
   const { mounted, exiting, onExitEnd } = usePresence(open, 420);
-  const headerRef = useReveal<HTMLElement>();
   const items = links(dict.nav);
 
   // Escape closes the mobile menu, as a dialog-like panel should.
@@ -39,8 +38,9 @@ export function Navbar({ dict, locale }: { dict: Dictionary; locale: Locale }) {
   return (
     <>
       <header
-        ref={headerRef}
-        className="reveal rv-down sticky top-0 z-50 border-b border-line/70 bg-cream/90 backdrop-blur"
+        data-reveal
+        style={vars({ "--stagger": "40ms" })}
+        className="reveal is-cascade rv-down sticky top-0 z-50 border-b border-line/70 bg-cream/90 backdrop-blur"
       >
         {/* Reading progress: a single rule whose scale tracks --scroll. */}
         <span aria-hidden="true" className="progress-bar bg-brand" />
@@ -49,7 +49,7 @@ export function Navbar({ dict, locale }: { dict: Dictionary; locale: Locale }) {
           <nav aria-label={dict.nav.mainLabel} className="hidden lg:block">
             <ul className="flex items-center gap-1">
               {items.map((l, i) => (
-                <li key={l.href}>
+                <li key={l.href} style={stagger(i + 1)} className="reveal rv-fade">
                   <MLink
                     href={l.href}
                     className={`nav-link rounded-lg px-3 py-2 text-lg font-sans leading-6 transition hover:text-brand ${
@@ -65,13 +65,16 @@ export function Navbar({ dict, locale }: { dict: Dictionary; locale: Locale }) {
             </ul>
           </nav>
           <div className="flex items-center gap-2">
-            <LanguageSwitcher dict={dict} locale={locale} />
-            <MLink href={site.appUrl} className="btn-ghost hidden !min-h-10 !px-4 sm:inline-flex">
-              {dict.nav.login}
-            </MLink>
+            <span style={stagger(7)} className="reveal rv-fade flex items-center gap-2">
+              <LanguageSwitcher dict={dict} locale={locale} />
+              <MLink href={site.appUrl} className="btn-ghost hidden !min-h-10 !px-4 sm:inline-flex">
+                {dict.nav.login}
+              </MLink>
+            </span>
             <button
               type="button"
-              className="pressable grid size-11 place-items-center rounded-xl text-navy lg:hidden"
+              style={stagger(8)}
+              className="pressable reveal rv-fade grid size-11 place-items-center rounded-xl text-navy lg:hidden"
               aria-expanded={open}
               aria-controls="mobile-nav"
               aria-label={open ? dict.nav.closeMenu : dict.nav.openMenu}

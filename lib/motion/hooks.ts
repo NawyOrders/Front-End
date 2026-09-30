@@ -42,29 +42,17 @@ export const vars = (values: Record<string, string | number>): Vars => values as
 /* --- reveal ----------------------------------------------------------------- */
 
 /**
- * Attach a `.reveal` element to the shared observer. It gets `.is-in` once and
- * is then unobserved, so scrolling back never replays the animation.
+ * The whole page reveals through one automatic watcher, not through per-element
+ * refs: `MotionRoot` calls this once and it registers every `data-reveal` node
+ * it finds, then keeps registering them as they appear.
  *
- *   const ref = useReveal<HTMLLIElement>();
- *   <li ref={ref} className="reveal rv-zoom" style={stagger(i)}>
- */
-export function useReveal<T extends Element = HTMLDivElement>(): RefObject<T | null> {
-  const ref = useRef<T | null>(null);
-
-  useEffect(() => {
-    const element = ref.current;
-    if (!element) return;
-    return observeReveal(element);
-  }, []);
-
-  return ref;
-}
-
-/**
- * Watches the document for `data-reveal` nodes and registers each one with the
- * shared observer as it appears. Mounted once, by MotionRoot: it is what keeps
- * content that mounts after the first paint (tabs, toggles, lazy sections, a
- * route change) from being stuck at its hidden start state.
+ *   <div data-reveal className="reveal rv-zoom" style={stagger(i)}>
+ *
+ * The attribute is the only contract between a component and the observer, so a
+ * section can never end up stuck at its hidden start state by forgetting a ref —
+ * which is exactly how the phone fan once disappeared. An element that needs to
+ * do something on reveal (a count-up) still calls `observeReveal` itself; the
+ * watcher skips anything a ref already owns.
  */
 export function useAutoReveal(): void {
   useEffect(() => startAutoReveal(), []);

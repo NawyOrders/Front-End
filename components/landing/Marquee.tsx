@@ -5,8 +5,9 @@ const items = (dict: Dictionary) => [...dict.marquee.restaurants, ...dict.marque
 export function Marquee({ dict }: { dict: Dictionary }) {
   return (
     <section
+      data-reveal
       aria-label={dict.marquee.label}
-      className="marquee overflow-hidden border-y border-line bg-cream-100 py-4"
+      className="marquee reveal rv-fade overflow-hidden border-y border-line bg-cream-100 py-4"
     >
       {/* One duplicated list on a single CSS loop: the track moves, and
           :hover pauses it without unmounting anything. Reduced motion never

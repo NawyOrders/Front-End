@@ -2,16 +2,14 @@
 
 import { memo } from "react";
 import type { Dictionary } from "@/lib/i18n";
-import { stagger, useReveal } from "@/lib/motion/hooks";
+import { stagger } from "@/lib/motion/hooks";
 import { SectionTitle } from "./SectionTitle";
 
 type Step = Dictionary["solution"]["steps"][number];
 
 const StepRow = memo(function StepRow({ step, i, dict }: { step: Step; i: number; dict: Dictionary }) {
-  const ref = useReveal<HTMLLIElement>();
-
   return (
-    <li ref={ref} style={stagger(i)} className={`is-cascade reveal ${i % 2 === 0 ? "rv-start" : "rv-end"} relative`}>
+    <li data-reveal style={stagger(i)} className={`is-cascade reveal ${i % 2 === 0 ? "rv-start" : "rv-end"} relative`}>
       {/* Same tilt as the icon tiles, so the number reacts to the step. */}
       <span
         style={stagger(1)}
@@ -32,12 +30,10 @@ const StepRow = memo(function StepRow({ step, i, dict }: { step: Step; i: number
 });
 
 export function Solution({ dict }: { dict: Dictionary }) {
-  const columnRef = useReveal<HTMLDivElement>();
-
   return (
     <section id="how" aria-labelledby="solution-title" className="section overflow-x-clip">
       <div className="container-x grid grid-cols-[minmax(0,1fr)] items-center gap-10 lg:grid-cols-2">
-        <div ref={columnRef} className="reveal is-cascade rv-start">
+        <div data-reveal className="reveal is-cascade rv-start">
           <span style={stagger(0)} className="tag reveal rv-pop">
             {dict.solution.badge}
           </span>
