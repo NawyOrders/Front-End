@@ -5,7 +5,14 @@ import { stagger, useMouseTilt, useParallax, vars } from "@/lib/motion/hooks";
 import { CountUp } from "./CountUp";
 import { HeadlineWords } from "./HeadlineWords";
 import { MLink } from "./MLink";
-import { PhoneMockup } from "./PhoneMockup";
+
+/* `fetchpriority` is spelled lowercase on purpose. React 18 has no
+   `fetchPriority` in its attribute table (it arrived in React 19), so the
+   camelCase prop logs "React does not recognize the fetchPriority prop" and
+   @types/react 19 types only the camelCase name. React passes an unknown
+   lowercase attribute straight through to the DOM, which is exactly what the
+   browser needs — and it is the spelling the HTML is parsed with anyway. */
+const HERO_FETCH_PRIORITY = { fetchpriority: "high" } as React.ImgHTMLAttributes<HTMLImageElement>;
 
 export function Hero({ dict }: { dict: Dictionary }) {
   /* Every block that reveals on its own carries `data-reveal`, which the single
@@ -64,13 +71,26 @@ export function Hero({ dict }: { dict: Dictionary }) {
           </dl>
         </div>
         <div className="flex justify-center lg:justify-start" style={{ perspective: 1200 }}>
-          {/* Tilt: --rx / --ry are written on this element and read by the
-              float keyframe below, so tilt and float never fight. */}
-          <div ref={tiltRef}>
-            <div data-reveal className="reveal rv-mask-side rounded-[2rem]">
-              <div className="hero-float">
-                <PhoneMockup dict={dict} alt={dict.showcase.mockupAlt} className="w-48 sm:w-56 lg:w-64" />
-              </div>
+          {/* Three nested layers, one job each, so no two transforms ever fight:
+              .hero-visual       the site's reveal (.reveal + .rv-zoom-out, --i
+                                stagger) — triggered by data-reveal, the one
+                                watcher in MotionRoot, plus its 1.5s safety net;
+              .hero-visual__tilt the cursor tilt (--rx / --ry, written by
+                                useMouseTilt) and the document parallax
+                                (--scroll), both desktop-only;
+              .hero-visual__img  the idle float and its drop-shadow. */}
+          <div data-reveal style={stagger(2)} className="hero-visual reveal rv-zoom-out">
+            <div ref={tiltRef} className="hero-visual__tilt">
+              <img
+                className="hero-visual__img"
+                src="/content.webp"
+                alt={dict.hero.visualAlt}
+                width={1024}
+                height={789}
+                loading="eager"
+                decoding="async"
+                {...HERO_FETCH_PRIORITY}
+              />
             </div>
           </div>
         </div>

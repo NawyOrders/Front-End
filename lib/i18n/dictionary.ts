@@ -35,7 +35,7 @@ export type Dictionary = {
     closeMenu: string;
     switchLabel: string;
   };
-  hero: { badge: string; titleLead: string; titleAccent: string; body: string; ctaPrimary: string; ctaSecondary: string };
+  hero: { badge: string; titleLead: string; titleAccent: string; body: string; ctaPrimary: string; ctaSecondary: string; visualAlt: string };
   stats: { value: string; label: string }[];
   marquee: { label: string; restaurants: string[] };
   problems: { badge: string; title: string; body: string; items: Card[] };

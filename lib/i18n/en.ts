@@ -30,6 +30,7 @@ export const en: Dictionary = {
     body: "Without writing a single line of code. Launch your own restaurant app with your full visual identity and take orders directly, with no delivery-platform middleman.",
     ctaPrimary: "Get started",
     ctaSecondary: "See the demo",
+    visualAlt: "Your own restaurant app with your visual identity: orders, offers and the dishes available to your customers",
   },
   stats: [
     { value: "+50", label: "restaurants joined" },

@@ -490,17 +490,131 @@
       scale(calc(var(--s, 1) * 1.06));
   }
 }
-/* The hero's single phone uses the same float track. */
-@keyframes heroFloat {
-  0%, 100% { transform: translate3d(0, 0, 0) rotateX(var(--rx)) rotateY(var(--ry)); }
-  50% { transform: translate3d(0, -10px, 0) rotateX(var(--rx)) rotateY(var(--ry)); }
+/* --- 9 · The hero visual ------------------------------------------------- */
+/* One image in three nested layers, each with exactly one transform to own, so
+   the entrance, the cursor tilt and the idle float compose instead of
+   overwriting one another:
+
+     .hero-visual        the site's reveal only. `.reveal` + `.rv-zoom-out`, the
+                         one `data-reveal` watcher and the same --ease / --dur /
+                         --i stagger as the headline and the buttons.
+     .hero-visual__tilt  the cursor tilt and the scroll parallax. Reads --rx /
+                         --ry (written by useMouseTilt) and --scroll (written on
+                         <html> by the one scroll listener, so it is inherited and
+                         needs no hook of its own). Desktop only.
+     .hero-visual__img   the idle float and its drop-shadow.
+
+   `translate` carries the scroll parallax and `transform` the tilt, the same
+   split as `.fan-phone`, and neither is transitioned — they read a value that
+   is rewritten every frame, so a transition would only lag behind it. Hover uses
+   the standalone `scale`, which leaves the float's `transform` alone. */
+
+/* The brand glow behind the image: it fades in with the reveal, then breathes. */
+.hero-visual {
+  --hv-parallax: -40px; /* document scroll progress -> 0 … -40px */
+  --hv-float-dur: 6s;
+  position: relative;
+  display: flex;
+  width: 100%;
+  max-width: 420px; /* mobile tier; widened in section 12 */
+  margin-inline: auto; /* centred in its own column, LTR and RTL alike */
+  justify-content: center;
+  /* `perspective` here is what layer 2's rotateX / rotateY are read against —
+     a parent element's `perspective` does not reach a grandchild unless the
+     3D context is kept alive, hence preserve-3d. `.reveal`'s own `filter`
+     flattens this for the length of the entrance and nothing else. */
+  perspective: 1200px;
+  transform-style: preserve-3d;
 }
-.hero-float { animation: heroFloat var(--float-dur) ease-in-out infinite; animation-delay: .4s; }
-@media (hover: hover) and (pointer: fine) {
-  .hero-float:hover { scale: 1.02; }
+.hero-visual::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset-block: 6%;
+  inset-inline: -8%;
+  border-radius: 50%;
+  background: radial-gradient(50% 50% at 50% 50%, rgb(255 106 19 / .3), transparent 70%);
+  filter: blur(20px);
+  opacity: 0;
+  pointer-events: none;
+  /* `--i` is a custom property, so the pseudo-element inherits the reveal's
+     stagger index and the glow fades in on exactly the parent's delay. */
+  transition: opacity var(--dur) var(--ease) calc(var(--i, 0) * var(--stagger));
+}
+.hero-visual.is-in::before {
+  opacity: .85;
+  animation: heroVisualGlow 5.4s var(--ease-soft) 1.2s infinite;
+}
+@keyframes heroVisualGlow {
+  0%, 100% { opacity: .85; scale: 1; }
+  50% { opacity: 1; scale: 1.07; }
 }
 
-/* --- 9 · Marquee -------------------------------------------------------- */
+/* Layer 2. Nothing here is transitioned: both values are written every frame. */
+.hero-visual__tilt {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  transform-style: preserve-3d;
+}
+
+/* Layer 3. */
+@keyframes heroVisualFloat {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -12px, 0); }
+}
+.hero-visual__img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  object-fit: contain;
+  animation: heroVisualFloat var(--hv-float-dur) ease-in-out infinite;
+  filter: drop-shadow(0 22px 32px rgb(15 42 71 / .22));
+  will-change: transform;
+}
+
+/* The soft ellipse the image sits on. It shares the float's duration and start
+   time, so it shrinks and softens exactly as the image lifts. */
+@keyframes heroVisualShadow {
+  0%, 100% { transform: scaleX(1); opacity: .5; }
+  50% { transform: scaleX(.86); opacity: .28; }
+}
+.hero-visual__tilt::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset-inline: 14%;
+  bottom: -1.25rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: radial-gradient(50% 50% at 50% 50%, rgb(15 42 71 / .4), transparent 70%);
+  filter: blur(9px);
+  opacity: .5;
+  pointer-events: none;
+  animation: heroVisualShadow var(--hv-float-dur) ease-in-out infinite;
+}
+
+/* Desktop tier: the tilt and the parallax turn on. Both are already gated again
+   in JS by canPointFine(), so the two agree. */
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .hero-visual__tilt {
+    translate: 0 calc(var(--scroll, 0) * var(--hv-parallax, -40px));
+    transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    will-change: transform;
+  }
+  .hero-visual__img {
+    scale: 1;
+    transition: scale var(--dur-fast) var(--ease);
+  }
+  .hero-visual:hover .hero-visual__img { scale: 1.03; }
+}
+
+/* --- 10 · Marquee -------------------------------------------------------- */
 @keyframes marquee {
   from { transform: translate3d(0, 0, 0); }
   to { transform: translate3d(-50%, 0, 0); }
@@ -523,7 +637,7 @@
 }
 .mq-dot { animation: dotPulse 2.4s var(--ease-soft) infinite; }
 
-/* --- 10 · Reduced motion ------------------------------------------------ */
+/* --- 11 · Reduced motion ------------------------------------------------ */
 /* Floats, parallax, tilt, masks and flips off; fades stay. Any element that
    has not been revealed yet is forced visible, so nothing can be stranded at
    opacity 0. */
@@ -540,7 +654,9 @@
       scale(var(--s, 1)) !important;
   }
   .fan-float,
-  .hero-float,
+  .hero-visual__img,
+  .hero-visual__tilt::after,
+  .hero-visual::before,
   .parallax,
   .marquee-track,
   .breathe,
@@ -549,6 +665,19 @@
   .collapse-item {
     animation: none !important;
   }
+  /* The hero image must still be *there* under reduced motion — only the
+     movement goes. Reveal, tilt, parallax, float and the glow's pulse all drop;
+     the glow simply stays on instead of breathing. */
+  .hero-visual__img {
+    transform: none !important;
+    filter: drop-shadow(0 22px 32px rgb(15 42 71 / .22)) !important;
+  }
+  .hero-visual__tilt {
+    translate: none !important;
+    transform: none !important;
+  }
+  .hero-visual__tilt::after { transform: none !important; opacity: .5 !important; }
+  .hero-visual::before { opacity: .85 !important; }
   .rv-blur,
   .rv-zoom-out,
   .rv-flip,
@@ -590,10 +719,10 @@
   .icon-draw [stroke] { stroke-dashoffset: 0 !important; transition: none !important; }
 }
 
-/* --- 11 · Touch and small screens --------------------------------------- */
+/* --- 12 · Touch and small screens --------------------------------------- */
 /* Tilt, the spotlight and the parallax transform are already behind the
    pointer media queries above; this is the belt to that pair of braces. */
-/* --- 11 — Touch, small screens and breakpoints ------------------------- */
+/* --- 12 — Touch, small screens and breakpoints ------------------------- */
 /* Three tiers, one place. `--rv-distance` (and the blur / zoom that scale with
    it) is re-declared per tier, so every variant in section 3 adapts to the
    screen without one call site knowing the width.
@@ -624,12 +753,15 @@
   }
   .rv-zoom-out { filter: blur(0) !important; }
   /* Nothing on a phone may push the page sideways. */
-  .rv-start,
+.rv-start,
   [dir="rtl"] .rv-start,
   .rv-end,
   [dir="rtl"] .rv-end {
     transform: translate3d(0, var(--rv-distance), 0);
   }
+  /* Mobile tier for the hero image: full width of its column, capped, centred,
+     and never wider than the column itself, so no phone can scroll sideways. */
+  .hero-visual { max-width: 420px; }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
   :root {
@@ -641,6 +773,10 @@
      pointer effect runs: the hover rules and lib/motion hooks stay off. */
   .card:hover, .lift:hover { translate: none; }
   .card:hover::after, .lift:hover::after { opacity: 0; }
+  .hero-visual { max-width: 520px; }
+}
+@media (min-width: 1024px) {
+  .hero-visual { max-width: 640px; }
 }
 /* Tilt, the spotlight and the parallax transform are already behind the
    pointer media queries above; this is the belt to that pair of braces. */
@@ -651,4 +787,8 @@
   /* The fan's scroll-driven spread is a pointer-tier effect too: below desktop
      the three phones simply sit in their fanned position. */
   .fan-phone { translate: none; }
+  /* Same for the hero image: no tilt, no scroll parallax, no hover lift. Only
+     the reveal and the idle float survive, and those are pure CSS. */
+  .hero-visual__tilt { translate: none; transform: none; }
+  .hero-visual__img { scale: 1; }
 }
