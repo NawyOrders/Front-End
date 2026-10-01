@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import { memo } from "react";
 import type { Dictionary } from "@/lib/i18n";
 import { stagger, useMouseTilt, useParallax, vars } from "@/lib/motion/hooks";
 import { PhoneMockup } from "./PhoneMockup";
-import { SectionTitle } from "./SectionTitle";
+import { FoodDecor, SectionTitle, type DecorPiece } from "./SectionTitle";
 
 type Slot = {
   id: "front" | "mid" | "back";
@@ -30,6 +30,17 @@ const slots: Slot[] = [
   { id: "front", z: "z-30", x: 0, y: 0, rotate: 0, scale: 1, depth: 0.35, float: { duration: "4.6s", delay: "0s", distance: "-10px", wobble: ".4deg" }, tone: "warm" },
   { id: "mid", z: "z-20", x: -120, y: 16, rotate: -8, scale: 0.94, depth: 0.8, float: { duration: "5.6s", delay: "-1.4s", distance: "-8px", wobble: "-.6deg" }, tone: "cool" },
   { id: "back", z: "z-10", x: 120, y: 16, rotate: 8, scale: 0.88, depth: 1.25, float: { duration: "6.4s", delay: "-2.8s", distance: "-12px", wobble: ".8deg" }, tone: "cool" },
+];
+
+/* Background food, blurred down to shadows. Kept off the fan's own half: the
+   copy column takes the reading-start edge and the phones take the rest, so the
+   pieces work the outer margins and are withheld from a phone, which has one
+   column and no margin to spend. */
+const decor: DecorPiece[] = [
+  { src: "/image%205.png", w: 193, h: 109, side: "start", top: 8,  dx: -0.04 , size: 1.05, rot: -7, drift: 5, lift: -13, blur: 0, op: 0.5, dur: 8.6, delay: -0.8, par: -16 },
+  { src: "/image%203.png", w: 213, h: 227, side: "end", top: 22,  dx: -0.05 , size: 0.95, rot: 8, drift: 6, lift: -10, blur: 2, op: 0.34, dur: 7.1, delay: -2.6, par: -10 },
+  { src: "/image%207.png", w: 140, h: 119, side: "start", top: 66,  dx: 0.03 , size: 0.8, rot: 12, drift: 4, lift: -12, blur: 5, op: 0.2, dur: 9.5, delay: -4, par: -20, tier: "md" },
+  { src: "/image%204.png", w: 111, h: 77, side: "end", top: 72,  dx: 0.03 , size: 0.9, rot: -11, drift: 5, lift: -9, blur: 3, op: 0.24, dur: 6.8, delay: -1.6, par: -13, tier: "lg" },
 ];
 
 const Phone = memo(function Phone({ slot, i, dict, alt }: { slot: Slot; i: number; dict: Dictionary; alt: string }) {
@@ -70,7 +81,8 @@ export function Showcase({ dict }: { dict: Dictionary }) {
 
   return (
     <section id={dict.sections.showcase} aria-labelledby="showcase-title" className="section overflow-x-clip scroll-mt-20">
-      <div className="container-x grid grid-cols-[minmax(0,1fr)] items-center gap-10 lg:grid-cols-2">
+      <FoodDecor pieces={decor} />
+      <div className="container-x relative grid grid-cols-[minmax(0,1fr)] items-center gap-10 lg:grid-cols-2">
         {/* Copy column = a plain fade (opacity only, no clip-path wipe and no
             slide). The fan keeps its own entrance below. */}
         <div data-reveal className="reveal is-cascade rv-fade">

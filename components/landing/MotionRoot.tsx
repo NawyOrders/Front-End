@@ -1,6 +1,6 @@
 "use client";
 
-import { useAutoReveal, useCardSpotlight, useScrollProgress } from "@/lib/motion/hooks";
+import { useAutoReveal, useCardSpotlight, useMotionPause, useScrollProgress } from "@/lib/motion/hooks";
 
 /**
  * Mounts the page-wide motion plumbing, once:
@@ -9,7 +9,9 @@ import { useAutoReveal, useCardSpotlight, useScrollProgress } from "@/lib/motion
  *     (a tab, a toggle, a lazy section, the next route) is still revealed;
  *   • the passive scroll listener behind `--scroll` (progress bar) and `--p`
  *     (parallax, phone fan);
- *   • the passive pointer listener behind `--mx` / `--my` (card spotlight).
+ *   • the passive pointer listener behind `--mx` / `--my` (card spotlight);
+ *   • the observer that freezes every `[data-pause]` loop — the hero pieces and
+ *     the section decor — while it is far off screen.
  *
  * Pointer work is gated to fine pointers inside lib/motion/runtime.ts, and
  * everything only ever writes CSS custom properties, so the tree around them
@@ -20,6 +22,7 @@ export function MotionRoot({ children }: { children: React.ReactNode }) {
   useAutoReveal();
   useScrollProgress();
   useCardSpotlight();
+  useMotionPause();
 
   return <>{children}</>;
 }

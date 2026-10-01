@@ -1,10 +1,25 @@
-"use client";
+﻿"use client";
 
 import type { Dictionary } from "@/lib/i18n";
 import { stagger } from "@/lib/motion/hooks";
 import { InstallPrompt } from "./InstallPrompt";
 import { Logo } from "./Logo";
 import { MLink } from "./MLink";
+import { FoodDecor, type DecorPiece } from "./SectionTitle";
+
+/* Background food, blurred down to shadows. The footer is the one place with no
+   section wrapper, so `relative` is the only thing added to it; the pieces work
+   the outer margins of the four-column grid. */
+const decor: DecorPiece[] = [
+  { src: "/image%206.png", w: 136, h: 91, side: "start", top: 10,  dx: -0.05 , size: 1.05, rot: -8, drift: 5, lift: -12, blur: 4, op: 0.24, dur: 8.8, delay: -3.8, par: -14 },
+  { src: "/image%209.png", w: 184, h: 125, side: "end", top: 46,  dx: -0.05 , size: 0.95, rot: 6, drift: 6, lift: -10, blur: 5, op: 0.2, dur: 10, delay: -6.2, par: -9 },
+  /* The last piece of the last section on the page. `top` has to stay high here:
+     the shared reveal observer shrinks its root by 10% at the bottom, and no
+     later content will ever scroll this piece back up into range, so anything
+     below that line would sit at opacity 0 forever. The margin is sized against
+     a tall viewport, which is the tightest case. */
+  { src: "/image%204.png", w: 111, h: 77, side: "end", top: 52,  dx: 0.04 , size: 0.85, rot: -11, drift: 4, lift: -13, blur: 2, op: 0.3, dur: 7.5, delay: -2, par: -17, tier: "md" },
+];
 
 const socials: { key: keyof Dictionary["footer"]["social"]; d: string }[] = [
   { key: "linkedin", d: "M6 9h3v10H6V9Zm1.500-5a1.800 1.800 0 1 1 0 3.600 1.800 1.800 0 0 1 0-3.600ZM11 9h2.900v1.400c.5-.9 1.600-1.700 3.200-1.700 3 0 3.900 1.900 3.900 4.700V19h-3v-5c0-1.300-.3-2.300-1.700-2.300S14 12.700 14 14v5h-3V9Z" },
@@ -15,8 +30,9 @@ const socials: { key: keyof Dictionary["footer"]["social"]; d: string }[] = [
 
 export function Footer({ dict }: { dict: Dictionary }) {
   return (
-    <footer data-reveal className="reveal rv-fade border-t border-line bg-cream-100 pt-16">
-      <div data-reveal className="is-cascade container-x grid gap-12 pb-12 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+    <footer data-reveal className="reveal rv-fade relative border-t border-line bg-cream-100 pt-16">
+      <FoodDecor pieces={decor} />
+      <div data-reveal className="is-cascade container-x relative grid gap-12 pb-12 md:grid-cols-[1.4fr_repeat(3,1fr)]">
         <div>
           <Logo dict={dict} />
           <p style={stagger(1)} className="reveal rv-fade mt-4 max-w-xs text-sm text-ink-muted">{dict.footer.tagline}</p>
@@ -37,7 +53,7 @@ export function Footer({ dict }: { dict: Dictionary }) {
           </nav>
         ))}
       </div>
-      <div data-reveal className="reveal is-cascade rv-fade border-t border-line py-6">
+      <div data-reveal className="reveal is-cascade rv-fade relative border-t border-line py-6">
         <div className="container-x flex flex-col items-center justify-between gap-4 sm:flex-row">
           <p className="text-xs text-ink-muted">{dict.footer.copyright.replace("{name}", dict.brand.name)}</p>
           <ul className="flex gap-2">

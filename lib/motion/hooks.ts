@@ -15,6 +15,7 @@ import {
   onFrame,
   prefersReducedMotion,
   startAutoReveal,
+  startMotionPause,
   startScroll,
   trackProgress,
   wake,
@@ -103,6 +104,16 @@ export function useCountUp(target: number, duration = 1400): RefObject<HTMLSpanE
  */
 export function useScrollProgress(): void {
   useEffect(() => startScroll(), []);
+}
+
+/**
+ * Pause the infinite loops that are far off screen. Mounted once, by MotionRoot:
+ * every `[data-pause]` node — the hero pieces and the section decor — reports
+ * in and out of a viewport-sized margin, and the class the observer writes is
+ * read by `animation-play-state` in motion.css. No scroll handler, no state.
+ */
+export function useMotionPause(): void {
+  useEffect(() => startMotionPause(), []);
 }
 
 /**

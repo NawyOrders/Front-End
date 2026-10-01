@@ -498,10 +498,12 @@
      .hero-visual        the site's reveal only. `.reveal` + `.rv-zoom-out`, the
                          one `data-reveal` watcher and the same --ease / --dur /
                          --i stagger as the headline and the buttons.
-     .hero-visual__tilt  the cursor tilt and the scroll parallax. Reads --rx /
-                         --ry (written by useMouseTilt) and --scroll (written on
-                         <html> by the one scroll listener, so it is inherited and
-                         needs no hook of its own). Desktop only.
+     .hero-visual__tilt  the scroll parallax and the 3D tilt. Reads --scroll
+                         (written on <html> by the one scroll listener, so it is
+                         inherited and needs no hook of its own) on every screen,
+                         and --rx / --ry (written by useMouseTilt) on desktop.
+                         Where there is no cursor it takes over with the slow
+                         sway below.
      .hero-visual__img   the idle float and its drop-shadow.
 
    `translate` carries the scroll parallax and `transform` the tilt, the same
@@ -511,7 +513,7 @@
 
 /* The brand glow behind the image: it fades in with the reveal, then breathes. */
 .hero-visual {
-  --hv-parallax: -40px; /* document scroll progress -> 0 … -40px */
+  --hv-parallax: -30px; /* document scroll progress -> 0 … -30px */
   --hv-float-dur: 6s;
   position: relative;
   display: flex;
@@ -550,7 +552,14 @@
   50% { opacity: 1; scale: 1.07; }
 }
 
-/* Layer 2. Nothing here is transitioned: both values are written every frame. */
+/* Layer 2. `translate` is the scroll parallax and runs on every screen; `transform`
+   is the 3D turn, which is a cursor tilt on desktop and the slow automatic sway
+   everywhere else. Neither is transitioned: both read a value that is rewritten
+   every frame (or, for the sway, one that must stay independent of the tilt). */
+@keyframes heroVisualSway {
+  from { transform: rotateX(-4deg) rotateY(4deg); }
+  to { transform: rotateX(4deg) rotateY(-4deg); }
+}
 .hero-visual__tilt {
   position: relative;
   z-index: 1;
@@ -558,6 +567,9 @@
   width: 100%;
   justify-content: center;
   transform-style: preserve-3d;
+  translate: 0 calc(var(--scroll, 0) * var(--hv-parallax, -30px));
+  animation: heroVisualSway 8s var(--ease-soft) infinite alternate;
+  will-change: transform;
 }
 
 /* Layer 3. */
@@ -600,10 +612,11 @@
 }
 
 /* Desktop tier: the tilt and the parallax turn on. Both are already gated again
-   in JS by canPointFine(), so the two agree. */
+   in JS by canPointFine(), so the two agree. The sway is dropped here because the
+   cursor is what drives the 3D turn from this width up. */
 @media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
   .hero-visual__tilt {
-    translate: 0 calc(var(--scroll, 0) * var(--hv-parallax, -40px));
+    animation: none;
     transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
     will-change: transform;
   }
@@ -613,6 +626,194 @@
   }
   .hero-visual:hover .hero-visual__img { scale: 1.03; }
 }
+
+/* --- 9b · The hero pieces (burst → float) -------------------------------- */
+/* The single food images parked behind the composite, which fly out of it on the
+   hero's reveal and then float for as long as the page is open.
+
+   Four nested things, so no two of them ever write the same property:
+     .hero-burst        the layer. inset 0 on .hero-visual, inert to the pointer,
+                        aria-hidden, and z-index 0 against the composite's z 1 —
+                        which is what makes a piece invisible until it leaves.
+                        `container-type: size` is what lets the offsets below be
+                        expressed in cqw / cqh, i.e. as a share of this box rather
+                        than as a pixel distance that would drift per breakpoint.
+     .hero-piece        position + the burst. Anchored at the container's centre;
+                        the transform is the only thing that moves it, so it starts
+                        exactly on top of the artwork and ends at its offset.
+     .hero-piece__float the endless idle float (transform) and the 12s pulse
+                        (the standalone `scale`, which composes with it).
+     .hero-piece__img   the artwork and its own drop-shadow. */
+
+.hero-burst {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  container-type: size;
+}
+
+/* The start state: stacked on the composite's centre, small, unlit, blurred. */
+.hero-piece {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  inline-size: var(--hw, 24cqw);
+  transform: translate3d(-50%, -50%, 0) scale(.3) rotate(0deg);
+  opacity: 0;
+  filter: blur(8px);
+  /* The parallax rides the standalone `translate`, which is applied before
+     `transform`, so scrolling can never interrupt the burst. */
+  translate: 0 calc(var(--scroll, 0) * var(--hp, 1) * -1px);
+}
+@keyframes heroPieceBurst {
+  from {
+    transform: translate3d(-50%, -50%, 0) scale(.3) rotate(0deg);
+    opacity: 0;
+    filter: blur(8px);
+  }
+  to {
+    transform: translate3d(calc(-50% + var(--hx, 0) * 1cqw), calc(-50% + var(--hy, 0) * 1cqh), 0)
+      scale(var(--hs, 1)) rotate(var(--hr, 0deg));
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+/* Keyed off the reveal the hero already has: one observer entry, no new watcher,
+   and the pieces arrive as a stagger because --hd differs per piece. */
+.hero-visual.is-in .hero-piece {
+  animation: heroPieceBurst .9s var(--ease-bounce) var(--hd, 0ms) both;
+}
+
+@keyframes heroPieceFloat {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(calc(var(--hwob, 1.6deg) * -1)); }
+  50% { transform: translate3d(0, var(--dfy, -10px), 0) rotate(var(--hwob, 1.6deg)); }
+}
+/* One gentle breath every 12s, on `scale` so the float's `transform` is untouched. */
+@keyframes heroPiecePulse {
+  0%, 100% { scale: 1; }
+  25% { scale: var(--hamp, 1.07); }
+  75% { scale: 1; }
+}
+.hero-piece__float {
+  position: relative;
+  display: block;
+  animation:
+    heroPieceFloat var(--hf, 5s) ease-in-out var(--hfd, 0s) infinite,
+    heroPiecePulse 12s var(--ease-soft) var(--hfd, 0s) infinite;
+  will-change: transform;
+}
+
+@keyframes heroPieceShadow {
+  0%, 100% { transform: scaleX(1); opacity: .5; }
+  50% { transform: scaleX(.84); opacity: .26; }
+}
+/* The ground shadow, on its own element so it can shrink and fade on the float's
+   exact duration and start time rather than sharing the float's transform. */
+.hero-piece__shadow {
+  position: absolute;
+  inset-inline: 14%;
+  bottom: -7%;
+  block-size: 13%;
+  border-radius: 50%;
+  background: radial-gradient(50% 50% at 50% 50%, rgb(15 42 71 / .34), transparent 70%);
+  filter: blur(7px);
+  opacity: .5;
+  animation: heroPieceShadow var(--hf, 5s) ease-in-out var(--hfd, 0s) infinite;
+}
+
+.hero-piece__img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  filter: drop-shadow(0 16px 26px rgb(15 42 71 / .26));
+}
+
+/* Without container queries there is no cqw / cqh, so the offsets fall back to
+   the inset the same percentages describe. The pieces land spread instead of
+   stacked, which is the same picture a fraction less fluid. */
+@supports not (container-type: size) {
+  .hero-piece {
+    left: calc(50% + var(--hx, 0) * 1%);
+    top: calc(50% + var(--hy, 0) * 1%);
+    transform: scale(var(--hs, 1)) rotate(var(--hr, 0deg));
+    opacity: 1;
+    filter: none;
+  }
+  .hero-visual.is-in .hero-piece { animation: none; }
+}
+
+/* --- 9c · Food decor in the section backgrounds -------------------------- */
+/* The blurred pieces that sit behind the copy in the sections. They read as
+   shadows rather than as pictures: a far piece is a fifth visible and softened,
+   a near one is barely softened at all, and every one of them is below the
+   content — the sections' own `relative` wrapper is what puts the text on top.
+
+   Same three-layer discipline as the hero pieces: the wrapper carries the
+   reveal and the position, the middle span carries the endless float and the
+   scroll parallax, and the img carries nothing but the art and its blur. The
+   `--d*` variables are written per piece by FoodDecor (SectionTitle.tsx).
+
+   `inset-inline-*` rather than left/right, so the whole arrangement mirrors
+   with the reading direction and neither locale gets a one-sided layout. */
+.decor {
+  position: absolute;
+  z-index: 0;
+  inset-block-start: var(--top, 50%);
+  inline-size: var(--dw, clamp(56px, 12vw, 180px));
+  pointer-events: none;
+}
+/* The bleed is a fraction of the piece's own fluid width, not of the section:
+   inset-* percentages resolve against the section, which would push a 56px piece
+   a full 100px off a 1400px section while barely moving it on a 320px phone.
+   Multiplying by --dw keeps "-0.3" meaning "a third of it hangs off" at every
+   width, which is what the arrangement was actually drawn for. */
+.decor--start { inset-inline-start: calc(var(--dx, -.3) * var(--dw)); }
+.decor--end { inset-inline-end: calc(var(--dx, -.3) * var(--dw)); }
+
+/* The drift is a slow rotation around the piece's own resting tilt, so a piece
+   that is laid over at 11deg sways through 6deg either side of it and never
+   straightens up mid-page. */
+@keyframes decorFloat {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(calc(var(--rz, 0deg) - var(--dr, 5deg))); }
+  50% { transform: translate3d(0, var(--dfy, -10px), 0) rotate(calc(var(--rz, 0deg) + var(--dr, 5deg))); }
+}
+.decor__float {
+  position: relative;
+  display: block;
+  translate: 0 calc(var(--scroll, 0) * var(--p, 10) * -1px);
+  animation: decorFloat var(--f, 8s) ease-in-out var(--fd, 0s) infinite;
+  will-change: transform;
+}
+.decor__img {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  opacity: var(--op, .25);
+  filter: blur(var(--blur, 4px)) drop-shadow(0 16px 26px rgb(15 42 71 / .22));
+}
+
+/* Piece count per screen: two at the edges on a phone, one more from tablet,
+   the rest from desktop. The pieces that only exist on the wider tiers are the
+   ones that would sit over a narrow column of copy, so a phone never gets one. */
+@media (max-width: 767px) {
+  .decor--md,
+  .decor--lg { display: none; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .decor--lg { display: none; }
+}
+
+/* An infinite loop that is nowhere near the viewport is frozen, not removed:
+   lib/motion/runtime.ts flips .is-motion-off from an IntersectionObserver with a
+   generous root margin, so a piece still runs as it comes into view. */
+/* `!important` because app/globals.css ends its own reduced-motion block with
+   `* { animation: none !important }`, and this rule has to out-rank that to keep
+   a loop actually pausable in every tier. */
+[data-pause].is-motion-off,
+[data-pause].is-motion-off * { animation-play-state: paused !important; }
 
 /* --- 10 · Marquee -------------------------------------------------------- */
 @keyframes marquee {
@@ -664,6 +865,34 @@
   .btn-pulse,
   .collapse-item {
     animation: none !important;
+  }
+  /* The hero pieces must still be *there* under reduced motion: the burst, the
+     pulse and the parallax all drop, and each piece is pinned to its final
+     offset instead. Only a much slower, much shallower float survives. */
+  .hero-piece {
+    transform: translate3d(calc(-50% + var(--hx, 0) * 1cqw), calc(-50% + var(--hy, 0) * 1cqh), 0)
+      scale(var(--hs, 1)) rotate(var(--hr, 0deg)) !important;
+    opacity: 1 !important;
+    filter: none !important;
+    translate: none !important;
+  }
+  /* Only the idle loops come back here, slower and shallower. They need the
+     `!important` to beat globals.css's `* { animation: none !important }`; the
+     shorthand is safe here precisely because the pause rule above is itself
+     `!important`, so it still wins on specificity and the loops stay pausable. */
+  .hero-piece__float {
+    --dfy: -4px;
+    --hwob: 1deg;
+    animation: heroPieceFloat calc(var(--hf, 5s) * 2.5) ease-in-out var(--hfd, 0s) infinite !important;
+  }
+  .hero-piece__shadow {
+    animation: heroPieceShadow calc(var(--hf, 5s) * 2.5) ease-in-out var(--hfd, 0s) infinite !important;
+  }
+  .decor__float {
+    --dr: 2deg;
+    --dfy: -4px;
+    animation: decorFloat calc(var(--f, 8s) * 2.5) ease-in-out var(--fd, 0s) infinite !important;
+    translate: none !important;
   }
   /* The hero image must still be *there* under reduced motion — only the
      movement goes. Reveal, tilt, parallax, float and the glow's pulse all drop;
@@ -762,6 +991,10 @@
   /* Mobile tier for the hero image: full width of its column, capped, centred,
      and never wider than the column itself, so no phone can scroll sideways. */
   .hero-visual { max-width: 420px; }
+  /* Same tier for the pieces around it: pulled toward the centre and scaled
+     down, so the spread still fits a 320px viewport with room for the
+     headline. Re-declared here for the same reason --rv-distance is. */
+  .hero-piece { --hx: var(--hxs); --hy: var(--hys); --hs: var(--hss); }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
   :root {
@@ -787,8 +1020,8 @@
   /* The fan's scroll-driven spread is a pointer-tier effect too: below desktop
      the three phones simply sit in their fanned position. */
   .fan-phone { translate: none; }
-  /* Same for the hero image: no tilt, no scroll parallax, no hover lift. Only
-     the reveal and the idle float survive, and those are pure CSS. */
-  .hero-visual__tilt { translate: none; transform: none; }
+  /* Same for the hero image: no tilt and no hover lift, but the scroll parallax
+     and the automatic sway are pure CSS and run at every width, so only the
+     cursor-driven `transform` is dropped. */
   .hero-visual__img { scale: 1; }
 }

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -7,7 +7,7 @@ import { cardStagger, stagger, useSlidingIndicator, vars } from "@/lib/motion/ho
 import { prefersReducedMotion } from "@/lib/motion/runtime";
 import { Icon } from "./Icon";
 import { MLink } from "./MLink";
-import { SectionTitle } from "./SectionTitle";
+import { FoodDecor, SectionTitle, type DecorPiece } from "./SectionTitle";
 
 type Plan = Dictionary["pricing"]["plans"][number];
 
@@ -15,9 +15,20 @@ type Plan = Dictionary["pricing"]["plans"][number];
    card-heavy sections do not look like the same animation twice. */
 const CARD_VARIANTS = ["rv-up", "rv-zoom", "rv-flip"] as const;
 
+/* Background food, blurred down to shadows. The plan row is centred and the
+   section is the widest on the page, so all four pieces live in the margins
+   beside it â€” and the two narrow tiers are withheld where a swipe track would
+   otherwise run under them. */
+const decor: DecorPiece[] = [
+  { src: "/image%209.png", w: 184, h: 125, side: "start", top: 6,  dx: -0.05 , size: 1.15, rot: -9, drift: 4, lift: -11, blur: 3, op: 0.26, dur: 9.8, delay: -3, par: -13 },
+  { src: "/image%206.png", w: 136, h: 91, side: "end", top: 18,  dx: -0.04 , size: 1, rot: 7, drift: 6, lift: -14, blur: 0, op: 0.5, dur: 7.6, delay: -0.6, par: -18 },
+  { src: "/image%205.png", w: 193, h: 109, side: "start", top: 76,  dx: 0.04 , size: 0.85, rot: 5, drift: 5, lift: -10, blur: 5, op: 0.2, dur: 8.7, delay: -4.4, par: -9, tier: "md" },
+  { src: "/image%201.png", w: 150, h: 103, side: "end", top: 70,  dx: 0.03 , size: 1.1, rot: -8, drift: 4, lift: -12, blur: 1, op: 0.42, dur: 10.4, delay: -6.2, par: -15, tier: "lg" },
+];
+
 /* One card = one `data-reveal` target. Below lg the row is a swipe track, so a
    card that is off to the side has not been revealed yet and slides in as it is
-   scrolled to — exactly what the carousel should do. */
+   scrolled to â€” exactly what the carousel should do. */
 const PlanCard = memo(function PlanCard({
   plan,
   i,
@@ -81,7 +92,7 @@ const PlanCard = memo(function PlanCard({
         ))}
         {plan.disabledFeatures?.map((f, n) => (
           <li key={f} style={stagger(5 + n)} className="reveal rv-fade flex items-center gap-2 text-ink-muted/60 line-through">
-            <span className="size-4 shrink-0 text-center leading-4" aria-hidden="true">–</span>{f}
+            <span className="size-4 shrink-0 text-center leading-4" aria-hidden="true">â€“</span>{f}
           </li>
         ))}
       </ul>
@@ -130,7 +141,7 @@ export function Pricing({ dict, locale }: { dict: Dictionary; locale: Locale }) 
   }, [centerCard, featuredIndex]);
 
   /* Scroll position is a UI concern here (which dot is current), not an
-     animation, so it is the one place a scroll handler may set state — and it
+     animation, so it is the one place a scroll handler may set state â€” and it
      only sets it when the nearest card actually changes. */
   useEffect(() => {
     const track = trackRef.current;
@@ -163,7 +174,8 @@ export function Pricing({ dict, locale }: { dict: Dictionary; locale: Locale }) 
 
   return (
     <section id={dict.sections.pricing} aria-labelledby="pricing-title" className="section overflow-x-clip scroll-mt-20">
-      <div className="container-x">
+      <FoodDecor pieces={decor} />
+      <div className="container-x relative">
         <div data-reveal className="reveal is-cascade rv-up text-center">
           <span style={stagger(0)} className="tag reveal rv-pop">{dict.pricing.badge}</span>
           <SectionTitle id="pricing-title" center className="mt-4">{dict.pricing.title}</SectionTitle>

@@ -196,6 +196,78 @@ export function startAutoReveal(): () => void {
   };
 }
 
+/* --- off-screen pause ----------------------------------------------------- */
+
+/**
+ * Freeze the endless loops that are nowhere near the viewport.
+ *
+ * The reveal observer above is once-only by design — a node is revealed once and
+ * unobserved — which is exactly wrong for this job: an idle float has to keep
+ * answering to where the page actually is. So this is a second, independent
+ * observer rather than a reuse, and it never touches `.is-in` or anything the
+ * reveal owns; it only adds `.is-motion-off`, which motion.css reads as
+ * `animation-play-state: paused`.
+ *
+ * The root margin is deliberately generous (60% of the viewport on each side) so
+ * a piece is already running by the time it scrolls into view — there is no
+ * visible "start" when it comes back on screen.
+ */
+const PAUSE_SELECTOR = "[data-pause]";
+const PAUSE_MARGIN = "60% 0px 60% 0px";
+
+let pauseObserver: IntersectionObserver | null = null;
+let pauseMutation: MutationObserver | null = null;
+let pauseRefs = 0;
+/** A Set rather than a WeakSet, because teardown has to be able to empty it. */
+const pauseSeen = new Set<Element>();
+
+function sweepPause(node: Node): void {
+  if (pauseObserver === null) return;
+  const watch = (el: Element) => {
+    if (pauseSeen.has(el)) return;
+    pauseSeen.add(el);
+    pauseObserver?.observe(el);
+  };
+  if (node instanceof Element) {
+    if (node.matches(PAUSE_SELECTOR)) watch(node);
+    node.querySelectorAll(PAUSE_SELECTOR).forEach(watch);
+    return;
+  }
+  node.childNodes.forEach(sweepPause);
+}
+
+/** Mounted once, by MotionRoot. */
+export function startMotionPause(): () => void {
+  pauseRefs += 1;
+  if (pauseRefs > 1) return () => void pauseRefs--;
+
+  pauseObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        entry.target.classList.toggle("is-motion-off", !entry.isIntersecting);
+      }
+    },
+    { rootMargin: PAUSE_MARGIN, threshold: 0 },
+  );
+  sweepPause(document);
+  // Same reason the reveal sweep has one: a piece mounted later (the next route,
+  // a lazy section) must be watched too, or its loop would never pause.
+  pauseMutation = new MutationObserver((records) => {
+    for (const record of records) record.addedNodes.forEach(sweepPause);
+  });
+  pauseMutation.observe(document.documentElement, { childList: true, subtree: true });
+
+  return () => {
+    pauseRefs -= 1;
+    if (pauseRefs > 0) return;
+    pauseMutation?.disconnect();
+    pauseMutation = null;
+    pauseObserver?.disconnect();
+    pauseObserver = null;
+    pauseSeen.clear();
+  };
+}
+
 /* --- scroll engine --------------------------------------------------------- */
 
 /**
