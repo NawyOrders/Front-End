@@ -24,7 +24,7 @@ export function Hero({ dict }: { dict: Dictionary }) {
   const tiltRef = useMouseTilt<HTMLDivElement>(7);
 
   return (
-    <section id="top" aria-labelledby="hero-title" className="relative overflow-hidden pb-16 pt-12 sm:pb-24 sm:pt-16">
+    <section id={dict.sections.top} aria-labelledby="hero-title" className="relative overflow-hidden pb-16 pt-12 scroll-mt-20 sm:pb-24 sm:pt-16">
       {/* The one decorative shape on the site, drifting against the page. */}
       <div
         ref={arcRef}
@@ -51,10 +51,10 @@ export function Hero({ dict }: { dict: Dictionary }) {
             {dict.hero.body}
           </p>
           <div data-reveal className="is-cascade mt-8 flex flex-wrap gap-3">
-            <MLink href="#contact" style={stagger(2)} className="btn-primary reveal rv-pop btn-pulse">
+            <MLink href={`#${dict.sections.contact}`} style={stagger(2)} className="btn-primary reveal rv-pop btn-pulse">
               {dict.hero.ctaPrimary}
             </MLink>
-            <MLink href="#showcase" style={stagger(3)} className="btn-ghost reveal rv-pop">
+            <MLink href={`#${dict.sections.showcase}`} style={stagger(3)} className="btn-ghost reveal rv-pop">
               {dict.hero.ctaSecondary}
             </MLink>
           </div>

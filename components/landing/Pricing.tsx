@@ -85,7 +85,7 @@ const PlanCard = memo(function PlanCard({
           </li>
         ))}
       </ul>
-      <MLink href="#contact" style={stagger(rows)} className={`reveal rv-pop mt-8 w-full ${plan.featured ? "btn-primary" : "btn-ghost"}`}>
+              <MLink href={`#${dict.sections.contact}`} style={stagger(rows)} className={`reveal rv-pop mt-8 w-full ${plan.featured ? "btn-primary" : "btn-ghost"}`}>
         {dict.pricing.cta}<span className="sr-only"> {plan.name}</span>
       </MLink>
     </li>
@@ -162,7 +162,7 @@ export function Pricing({ dict, locale }: { dict: Dictionary; locale: Locale }) 
   }, []);
 
   return (
-    <section id="pricing" aria-labelledby="pricing-title" className="section overflow-x-clip">
+    <section id={dict.sections.pricing} aria-labelledby="pricing-title" className="section overflow-x-clip scroll-mt-20">
       <div className="container-x">
         <div data-reveal className="reveal is-cascade rv-up text-center">
           <span style={stagger(0)} className="tag reveal rv-pop">{dict.pricing.badge}</span>

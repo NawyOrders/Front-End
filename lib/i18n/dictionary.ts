@@ -2,6 +2,13 @@ import type { IconName } from "@/components/landing/Icon";
 
 export type Card = { icon: IconName; title: string; text: string };
 
+/** Every section that owns a URL fragment. Adding a key here forces both
+    dictionaries to supply a slug, and gives the anchor helpers a closed union
+    to switch on. */
+export const SECTION_KEYS = ["top", "features", "how", "pricing", "showcase", "faq", "contact"] as const;
+
+export type SectionKey = (typeof SECTION_KEYS)[number];
+
 export type Plan = {
   id: string;
   name: string;
@@ -22,6 +29,11 @@ export type Dictionary = {
   };
   brand: { name: string };
   install: { label: string };
+  /** The single source of truth for every in-page anchor. Section components
+      set their `id` from here and every link builds its `href` from here, so a
+      slug is edited in exactly one place per language. `Record<SectionKey,
+      string>` makes a missing key a TypeScript error. */
+  sections: Record<SectionKey, string>;
   nav: {
     mainLabel: string;
     mobileLabel: string;

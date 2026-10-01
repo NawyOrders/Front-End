@@ -10,6 +10,21 @@ export const ar: Dictionary = {
   },
   brand: { name: "ناوي أوردر" },
   install: { label: "ثبّت التطبيق" },
+
+  /* URL fragments. The single source of truth for every anchor on the page:
+     section components read their id from here and every link builds its
+     href from here, so a slug is changed in one place. Arabic uses short
+     readable words joined with hyphens - no spaces, no punctuation - so the
+     fragment survives copy-paste and percent-encoding intact. */
+  sections: {
+    top: "الرئيسية",
+    features: "المميزات",
+    how: "كيف-يعمل",
+    pricing: "الأسعار",
+    showcase: "الأمثلة",
+    faq: "الأسئلة-الشائعة",
+    contact: "تواصل-معنا",
+  },
   nav: {
     mainLabel: "التنقل الرئيسي",
     mobileLabel: "قائمة الموبايل",

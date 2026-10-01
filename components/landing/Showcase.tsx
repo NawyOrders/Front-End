@@ -69,7 +69,7 @@ export function Showcase({ dict }: { dict: Dictionary }) {
   const fanRef = useParallax<HTMLDivElement>();
 
   return (
-    <section id="showcase" aria-labelledby="showcase-title" className="section overflow-x-clip">
+    <section id={dict.sections.showcase} aria-labelledby="showcase-title" className="section overflow-x-clip scroll-mt-20">
       <div className="container-x grid grid-cols-[minmax(0,1fr)] items-center gap-10 lg:grid-cols-2">
         {/* Copy column = a plain fade (opacity only, no clip-path wipe and no
             slide). The fan keeps its own entrance below. */}

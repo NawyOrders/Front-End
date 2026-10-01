@@ -9,6 +9,8 @@ export function getDictionary(locale: Locale): Dictionary {
   return dictionaries[locale] ?? dictionaries[defaultLocale];
 }
 
-export { defaultLocale, isLocale, locales, localeDir, localeLabel, localeTag, localeNumber, otherLocale, LOCALE_COOKIE } from "./config";
-export type { Dictionary, Plan, Card } from "./dictionary";
+export { defaultLocale, isLocale, locales, localeDir, localeLabel, localeTag, localeNumber, otherLocale, localeFromPathname, LOCALE_COOKIE } from "./config";
+export { SECTION_KEYS } from "./dictionary";
+export type { Dictionary, Plan, Card, SectionKey } from "./dictionary";
 export type { Locale } from "./config";
+export { decodeHash, hashFor, keyForHash, keyForSlug, slugFor, translateHash, isForeignHash } from "./anchors";

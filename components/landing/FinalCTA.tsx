@@ -8,7 +8,7 @@ import { SectionTitle } from "./SectionTitle";
 
 export function FinalCTA({ dict }: { dict: Dictionary }) {
   return (
-    <section id="contact" aria-labelledby="cta-title" className="section overflow-x-clip bg-navy text-center text-white">
+    <section id={dict.sections.contact} aria-labelledby="cta-title" className="section overflow-x-clip scroll-mt-20 bg-navy text-center text-white">
       <div className="container-x">
         <SectionTitle id="cta-title" center>{dict.cta.title}</SectionTitle>
         <p data-reveal style={stagger(1)} className="reveal rv-mask-up mx-auto mt-4 max-w-md text-white/75">{dict.cta.body}</p>

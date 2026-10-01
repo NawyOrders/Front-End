@@ -10,6 +10,7 @@ import { Testimonials } from "@/components/landing/Testimonials";
 import { FAQ } from "@/components/landing/FAQ";
 import { FinalCTA } from "@/components/landing/FinalCTA";
 import { Footer } from "@/components/landing/Footer";
+import { HashScroll } from "@/components/landing/HashScroll";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { site } from "@/lib/site";
 import { notFound } from "next/navigation";
@@ -50,6 +51,9 @@ export default function Page({ params }: { params: { locale: string } }) {
         <FinalCTA dict={dict} />
       </main>
       <Footer dict={dict} />
+      {/* Renders nothing. Owns the localized fragment on load, on Back/Forward,
+          and on a first-paint deep link that the browser resolved too early. */}
+      <HashScroll locale={locale} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     </>
   );

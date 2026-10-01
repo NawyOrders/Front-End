@@ -21,3 +21,15 @@ export function isLocale(value: string | undefined): value is Locale {
 export function otherLocale(locale: Locale): Locale {
   return locale === "ar" ? "en" : "ar";
 }
+
+/**
+ * The locale of the current path, or null off a localized route.
+ *
+ * Anchor links are spread across components that only receive the dictionary,
+ * not the locale. The path already carries the answer, so it is read from there
+ * rather than threading a prop through every call site.
+ */
+export function localeFromPathname(pathname: string): Locale | null {
+  const first = pathname.split("/")[1] ?? "";
+  return isLocale(first) ? first : null;
+}

@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { localeLabel, otherLocale } from "@/lib/i18n/config";
+import { translateHash } from "@/lib/i18n/anchors";
 import { Icon } from "./Icon";
 import { MLink } from "./MLink";
 
@@ -21,7 +22,15 @@ export function LanguageSwitcher({ dict, locale, className = "" }: { dict: Dicti
   const target = otherLocale(locale);
   const pathname = usePathname() ?? "";
   const rest = pathname.replace(new RegExp(`^/${locale}`), "") || "/";
-  const href = `/${target}${rest === "/" ? "" : rest}${hash}`;
+
+  /* The fragment is a translated string, so it has to be translated too:
+     switching from `#المميزات` to English must not produce `/en#المميزات`,
+     which matches no id. `translateHash` resolves the current fragment back to
+     the section it stands for and re-expresses it in the target language, which
+     is also what keeps the reader on the section they were reading. A fragment
+     that names nothing known is dropped rather than carried over broken. */
+  const nextHash = translateHash(hash, locale) ?? "";
+  const href = `/${target}${rest === "/" ? "" : rest}${nextHash}`;
 
   // Deliberately no onClick. middleware.ts persists the locale cookie on every
   // /[locale] request, so switching is a plain <Link> navigation and there is no

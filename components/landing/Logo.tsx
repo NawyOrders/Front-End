@@ -8,7 +8,7 @@ export function Logo({ dict, light = false }: { dict: Dictionary; light?: boolea
      `.is-in`, and the wordmark fades in behind it. */
   return (
     <MLink
-      href="#top"
+      href={`#${dict.sections.top}`}
       data-reveal
       className="is-cascade inline-flex items-center gap-2 font-extrabold"
       aria-label={`${dict.brand.name} - ${dict.nav.home}`}

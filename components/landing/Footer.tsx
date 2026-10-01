@@ -30,7 +30,7 @@ export function Footer({ dict }: { dict: Dictionary }) {
             <ul className="mt-4 space-y-2 text-sm text-ink-muted">
               {c.links.map((l, k) => (
                 <li key={l} style={stagger(2 + k)} className="reveal rv-fade">
-                  <MLink href="#top" className="hover:text-brand">{l}</MLink>
+                    <MLink href={`#${dict.sections.top}`} className="hover:text-brand">{l}</MLink>
                 </li>
               ))}
             </ul>
@@ -44,8 +44,8 @@ export function Footer({ dict }: { dict: Dictionary }) {
             {socials.map((s, i) => (
               <li key={s.key} style={stagger(i)} className="reveal rv-pop">
                 <a
-                  href="#top"
-                  aria-label={dict.footer.social[s.key]}
+                    href={`#${dict.sections.top}`}
+                    aria-label={dict.footer.social[s.key]}
                   className="pressable grid size-10 place-items-center rounded-full bg-navy text-white transition-colors hover:bg-brand"
                 >
                   <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true"><path d={s.d} fill="currentColor" /></svg>

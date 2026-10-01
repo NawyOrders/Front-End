@@ -10,6 +10,19 @@ export const en: Dictionary = {
   },
   brand: { name: "Nawy Order" },
   install: { label: "Install the app" },
+
+  /* URL fragments. The single source of truth for every anchor on the page:
+     section components read their id from here and every link builds its
+     href from here, so a slug is changed in one place. */
+  sections: {
+    top: "top",
+    features: "features",
+    how: "how",
+    pricing: "pricing",
+    showcase: "showcase",
+    faq: "faq",
+    contact: "contact",
+  },
   nav: {
     mainLabel: "Main navigation",
     mobileLabel: "Mobile navigation",

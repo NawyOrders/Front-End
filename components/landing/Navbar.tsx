@@ -1,21 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Dictionary, Locale } from "@/lib/i18n";
+import type { SectionKey } from "@/lib/i18n/dictionary";
 import { site } from "@/lib/site";
 import { stagger, usePresence, vars } from "@/lib/motion/hooks";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { Logo } from "./Logo";
-import { MLink } from "./MLink";
+import { MLink, resolveFragmentTarget, writeFragment } from "./MLink";
+import { scrollToFragment } from "./scrollToFragment";
 
-const links = (nav: Dictionary["nav"]) => [
-  { href: "#top", label: nav.home },
-  { href: "#features", label: nav.features },
-  { href: "#how", label: nav.how },
-  { href: "#pricing", label: nav.pricing },
-  { href: "#showcase", label: nav.showcase },
-  { href: "#faq", label: nav.faq },
-];
+/* One list drives the desktop bar and the mobile panel. `key` is the section id
+   suffix, `navKey` the label in `dict.nav` — they differ only for the first one,
+   which is labelled "home" in both languages but anchors to the hero. */
+const NAV_ITEMS = [
+  { key: "top", navKey: "home" },
+  { key: "features", navKey: "features" },
+  { key: "how", navKey: "how" },
+  { key: "pricing", navKey: "pricing" },
+  { key: "showcase", navKey: "showcase" },
+  { key: "faq", navKey: "faq" },
+] as const satisfies readonly { key: SectionKey; navKey: keyof Dictionary["nav"] }[];
+
+/* The href is built from the dictionary rather than written as a literal, so the
+   fragment is localized like any other string. */
+const links = (dict: Dictionary) =>
+  NAV_ITEMS.map((item) => ({ key: item.key, href: `#${dict.sections[item.key]}`, label: dict.nav[item.navKey] }));
 
 /* Three rules that morph into one X, in the same 24px box and the same navy as
    the static icon it replaces. The state lives on the button's aria-expanded,
@@ -23,7 +33,58 @@ const links = (nav: Dictionary["nav"]) => [
 export function Navbar({ dict, locale }: { dict: Dictionary; locale: Locale }) {
   const [open, setOpen] = useState(false);
   const { mounted, exiting, onExitEnd } = usePresence(open, 420);
-  const items = links(dict.nav);
+  const items = links(dict);
+
+  /* The mobile panel is a `height: 0 -> auto` collapse INSIDE the sticky
+     header, so while it is open the whole page sits lower by its height. Two
+     things follow from that.
+
+     First, the click must NOT scroll immediately: MLink would measure the
+     document while the panel is still 389px tall and land short by exactly that
+     much once it collapses. So the click writes the URL and stores the target,
+     and the scroll is deferred.
+
+     Second, "deferred until the panel is closed" cannot be read off React
+     state. `usePresence` unmounts on its own 420ms timer while the collapse
+     transition is `--dur` (800ms), so `mounted === false` arrives while the
+     panel still occupies most of its height, and waiting for it reproduces the
+     same off-by-the-panel-height landing. The panel is therefore MEASURED: the
+     observer fires on the transition's own frames and the scroll goes out on
+     the first frame where the panel is actually flat. That is also the right
+     moment under reduced motion, where the collapse is instant. */
+  const [pendingFragment, setPendingFragment] = useState<string | null>(null);
+  const panel = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const node = panel.current;
+    const fragment = pendingFragment;
+    if (!node || !fragment || open) return;
+
+    const finish = () => {
+      if (node.getBoundingClientRect().height > 1) return;
+      observer.disconnect();
+      setPendingFragment(null);
+      scrollToFragment(`#${fragment}`);
+    };
+
+    const observer = new ResizeObserver(finish);
+    observer.observe(node);
+    finish();
+    return () => observer.disconnect();
+  }, [open, pendingFragment]);
+
+  /* `preventDefault` on a delegated handler still stops MLink's own handler,
+     which runs the same event: it checks `defaultPrevented` before touching the
+     URL or the scroll. So this one function owns the whole mobile behaviour. */
+  const closeFor = (href: string) => (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey || event.button !== 0) return;
+    const target = resolveFragmentTarget(href, locale);
+    if (!target) return;
+    event.preventDefault();
+    writeFragment(target.fragment, target.mode);
+    setPendingFragment(target.fragment);
+    setOpen(false);
+  };
 
   // Escape closes the mobile menu, as a dialog-like panel should.
   useEffect(() => {
@@ -49,7 +110,7 @@ export function Navbar({ dict, locale }: { dict: Dictionary; locale: Locale }) {
           <nav aria-label={dict.nav.mainLabel} className="hidden lg:block">
             <ul className="flex items-center gap-1">
               {items.map((l, i) => (
-                <li key={l.href} style={stagger(i + 1)} className="reveal rv-fade">
+                <li key={l.key} style={stagger(i + 1)} className="reveal rv-fade">
                   <MLink
                     href={l.href}
                     className={`nav-link rounded-lg px-3 py-2 text-lg font-sans leading-6 transition hover:text-brand ${
@@ -93,6 +154,7 @@ export function Navbar({ dict, locale }: { dict: Dictionary; locale: Locale }) {
             usePresence timer, under reduced motion) unmounts it. */}
         <div
           id="mobile-nav"
+          ref={panel}
           data-open={mounted && !exiting ? "true" : "false"}
           onTransitionEnd={onExitEnd}
           {...(open ? {} : ({ inert: "" } as Record<string, string>))}
@@ -100,10 +162,10 @@ export function Navbar({ dict, locale }: { dict: Dictionary; locale: Locale }) {
         >          <div>
             <ul className="container-x flex flex-col py-3">
               {items.map((l, i) => (
-                <li key={l.href} className="collapse-item" style={stagger(i)}>
+                <li key={l.key} className="collapse-item" style={stagger(i)}>
                   <MLink
                     href={l.href}
-                    onClick={() => setOpen(false)}
+                    onClick={closeFor(l.href)}
                     className="pressable block rounded-lg px-2 py-3 text-base font-semibold leading-7 text-navy"
                   >
                     {l.label}
@@ -122,6 +184,8 @@ export function Navbar({ dict, locale }: { dict: Dictionary; locale: Locale }) {
 
       {/* Backdrop lives outside the header: the header is a sticky element with
           its own containing block, so a fixed child inside it would be clipped. */}
+      {/* Tapping the backdrop dismisses without navigating, so nothing is
+          pending and no re-scroll happens. */}
       <div aria-hidden="true" onClick={() => setOpen(false)} className="backdrop" data-open={open ? "true" : "false"} />
     </>
   );
