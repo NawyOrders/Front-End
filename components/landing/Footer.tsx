@@ -2,6 +2,7 @@
 
 import type { Dictionary } from "@/lib/i18n";
 import { stagger } from "@/lib/motion/hooks";
+import { InstallPrompt } from "./InstallPrompt";
 import { Logo } from "./Logo";
 import { MLink } from "./MLink";
 
@@ -19,6 +20,9 @@ export function Footer({ dict }: { dict: Dictionary }) {
         <div>
           <Logo dict={dict} />
           <p style={stagger(1)} className="reveal rv-fade mt-4 max-w-xs text-sm text-ink-muted">{dict.footer.tagline}</p>
+          {/* Renders null until the browser says the app is installable, so it
+              only ever adds a row inside this column. */}
+          <InstallPrompt dict={dict} />
         </div>
         {dict.footer.columns.map((c, n) => (
           <nav key={c.title} style={stagger(1 + n)} aria-label={c.title} className="reveal rv-fade">

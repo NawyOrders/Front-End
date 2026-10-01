@@ -21,6 +21,7 @@ export type Dictionary = {
     ogTitle: string;
   };
   brand: { name: string };
+  install: { label: string };
   nav: {
     mainLabel: string;
     mobileLabel: string;

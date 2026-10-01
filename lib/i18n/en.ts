@@ -9,6 +9,7 @@ export const en: Dictionary = {
     ogTitle: "Nawy Order | Your restaurant's branded app, live in 48 hours",
   },
   brand: { name: "Nawy Order" },
+  install: { label: "Install the app" },
   nav: {
     mainLabel: "Main navigation",
     mobileLabel: "Mobile navigation",

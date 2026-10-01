@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { getDictionary, isLocale, localeDir, localeTag, locales, type Locale } from "@/lib/i18n";
 import { site } from "@/lib/site";
 import { MotionRoot } from "@/components/landing/MotionRoot";
+import { RegisterSW } from "@/components/landing/RegisterSW";
 import "../globals.css";
 // Imported after globals.css so the motion layer wins on the few selectors it
 // shares with it (.fan-stage, .card, .btn).
@@ -36,7 +37,7 @@ const alexandria = Alexandria({
   variable: "--font-alexandria",
 });
 
-export const viewport: Viewport = { themeColor: "#FFF7EA", width: "device-width", initialScale: 1 };
+export const viewport: Viewport = { themeColor: "#0F2A47", width: "device-width", initialScale: 1 };
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
@@ -49,6 +50,23 @@ export function generateMetadata({ params }: { params: { locale: string } }): Me
     metadataBase: new URL(site.url),
     title: { default: dict.meta.title, template: dict.meta.titleTemplate },
     description: dict.meta.description,
+    applicationName: dict.brand.name,
+    appleWebApp: {
+      capable: true,
+      title: dict.brand.name,
+      statusBarStyle: "default",
+    },
+    icons: {
+      // The maskable icon is deliberately absent: `purpose` is a manifest-only
+      // concept that Next 14's IconDescriptor does not model, and it is already
+      // declared in app/manifest.ts where installability actually reads it.
+      icon: [
+        { url: "/icon.svg", type: "image/svg+xml" },
+        { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+        { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+      ],
+      apple: { url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    },
     alternates: {
       canonical: `/${locale}`,
       languages: { "ar-EG": "/ar", "en-US": "/en", "x-default": "/ar" },
@@ -71,6 +89,7 @@ export default function LocaleLayout({ children, params }: { children: React.Rea
   return (
     <html lang={params.locale} dir={localeDir[params.locale]} className={`${cairoArabic.variable} ${cairoLatin.variable} ${alexandria.variable}`}>
       <body>
+        <RegisterSW />
         <MotionRoot>{children}</MotionRoot>
       </body>
     </html>

@@ -9,6 +9,7 @@ export const ar: Dictionary = {
     ogTitle: "ناوي أوردر | تطبيق مطعمك باسمك جاهز في 48 ساعة",
   },
   brand: { name: "ناوي أوردر" },
+  install: { label: "ثبّت التطبيق" },
   nav: {
     mainLabel: "التنقل الرئيسي",
     mobileLabel: "قائمة الموبايل",
