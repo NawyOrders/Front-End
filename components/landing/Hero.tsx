@@ -15,10 +15,11 @@ import { MLink } from "./MLink";
 const HERO_FETCH_PRIORITY = { fetchpriority: "high" } as React.ImgHTMLAttributes<HTMLImageElement>;
 
 /* The wide composite: every food piece arranged together on a transparent
-   canvas, so it is what the hero column is built around. `%20` is the encoded
-   spelling of the real file name in public/ — the same file, unambiguous to the
-   browser and to the service worker's stale-while-revalidate. */
-const COMPOSITE = { src: "/image%202.png", width: 1024, height: 789 };
+   canvas, so it is what the hero column is built around. `Hero.png` is the real
+   file name in public/; the images in the array below are its single pieces.
+   width/height are the file's own intrinsic size, which is what reserves the
+   right aspect-ratio box before the PNG decodes. */
+const COMPOSITE = { src: "/Hero.png", width: 718, height: 531 };
 
 /**
  * One single-piece image, parked behind the composite until the hero reveals.
@@ -31,8 +32,10 @@ const COMPOSITE = { src: "/image%202.png", width: 1024, height: 789 };
  *   d       burst delay (ms), so the pieces arrive as a stagger;
  *   f       idle float duration (s), 4-7s;
  *   p       scroll parallax multiplier (px across the whole document);
- *   xSm/ySm/sSm   the same values under 768px: pulled inward and shrunk, so the
- *           spread stays inside a 320px viewport and clear of the headline.
+ *   xSm/ySm/sSm   the same values under 1024px: pulled further toward the
+ *           centre, and sSm is s * 1.15, so a piece stays as visible on a
+ *           375px screen as on a desktop one while the spread still fits
+ *           inside the viewport and clear of the headline.
  *
  * `wp` (piece width in cqw) and `w` / `h` (intrinsic size, for the img
  * attributes) are the only extras, and both are properties of the file rather
@@ -56,13 +59,13 @@ type Piece = {
 };
 
 const pieces: Piece[] = [
-  { src: "/image%203.png", w: 213, h: 227, wp: 26, x: -32, y: 24, r: -9, s: 1.05, d: 0, f: 5.2, p: 1, xSm: -28, ySm: 28, sSm: 0.9 },
-  { src: "/image%205.png", w: 193, h: 109, wp: 28, x: 30, y: 22, r: 7, s: 1, d: 90, f: 6.1, p: 0.7, xSm: 26, ySm: 26, sSm: 0.88 },
-  { src: "/image%209.png", w: 184, h: 125, wp: 22, x: -26, y: -26, r: 5, s: 0.95, d: 180, f: 4.6, p: 1.25, xSm: -22, ySm: -22, sSm: 0.85 },
-  { src: "/image%201.png", w: 150, h: 103, wp: 24, x: 26, y: -22, r: -6, s: 1, d: 260, f: 6.8, p: 0.55, xSm: 22, ySm: -20, sSm: 0.88 },
-  { src: "/image%206.png", w: 136, h: 91, wp: 24, x: 0, y: 38, r: -3, s: 0.82, d: 340, f: 5.7, p: 0.9, xSm: 0, ySm: 34, sSm: 0.8 },
-  { src: "/image%207.png", w: 140, h: 119, wp: 20, x: -38, y: -2, r: 11, s: 0.85, d: 420, f: 4.9, p: 1.15, xSm: -32, ySm: -2, sSm: 0.8 },
-  { src: "/image%204.png", w: 111, h: 77, wp: 18, x: 38, y: 4, r: -12, s: 0.9, d: 500, f: 6.4, p: 0.75, xSm: 32, ySm: 4, sSm: 0.82 },
+  { src: "/image%203.png", w: 213, h: 227, wp: 26, x: -32, y: 24, r: -9, s: 1.05, d: 0, f: 5.2, p: 1, xSm: -30, ySm: 30, sSm: 1.21 },
+  { src: "/image%205.png", w: 193, h: 109, wp: 28, x: 30, y: 22, r: 7, s: 1, d: 90, f: 6.1, p: 0.7, xSm: 28, ySm: 28, sSm: 1.15 },
+  { src: "/image%209.png", w: 184, h: 125, wp: 22, x: -26, y: -26, r: 5, s: 0.95, d: 180, f: 4.6, p: 1.25, xSm: -24, ySm: -24, sSm: 1.09 },
+  { src: "/image%201.png", w: 150, h: 103, wp: 24, x: 26, y: -22, r: -6, s: 1, d: 260, f: 6.8, p: 0.55, xSm: 24, ySm: -22, sSm: 1.15 },
+  { src: "/image%206.png", w: 136, h: 91, wp: 24, x: 0, y: 38, r: -3, s: 0.82, d: 340, f: 5.7, p: 0.9, xSm: 0, ySm: 36, sSm: 0.94 },
+  { src: "/image%207.png", w: 140, h: 119, wp: 20, x: -38, y: -2, r: 11, s: 0.85, d: 420, f: 4.9, p: 1.15, xSm: -34, ySm: -2, sSm: 0.98 },
+  { src: "/image%204.png", w: 111, h: 77, wp: 18, x: 38, y: 4, r: -12, s: 0.9, d: 500, f: 6.4, p: 0.75, xSm: 34, ySm: 4, sSm: 1.04 },
 ];
 
 /* Per-piece float wobble and the 12s pulse depth, derived from the index so the
@@ -70,13 +73,20 @@ const pieces: Piece[] = [
 const WOBBLE = [1.2, 1.9, 1.4, 2.2, 1.6, 1.3, 2.1];
 
 /** One piece's custom properties. `--h*` keeps them clear of the motion system's
-    own `--p` (per-element progress), `--d` (fan depth) and `--f` (float). */
+    own `--p` (per-element progress), `--d` (fan depth) and `--f` (float).
+
+    Every value that CSS reads as a typed value carries its unit here, so the
+    declaration can never end up "unitless where a unit is required" — that
+    mistake is not a visible warning, it silently voids the whole declaration
+    and leaves every piece parked on the centre, stacked behind the composite.
+    `--hx`/`--hy`/`--hp` are the three deliberate exceptions: motion.css
+    multiplies them by cqw / cqh / px, so they are read as bare numbers. */
 const pieceVars = (q: Piece, i: number) =>
   vars({
     "--hw": `${q.wp}cqw`,
     "--hx": q.x,
     "--hy": q.y,
-    "--hr": q.r,
+    "--hr": `${q.r}deg`,
     "--hs": q.s,
     "--hd": `${q.d}ms`,
     "--hf": `${q.f}s`,

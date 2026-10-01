@@ -651,7 +651,12 @@
   z-index: 0;
   pointer-events: none;
   container-type: size;
+  /* The reading direction flips the horizontal half of the arrangement and
+     nothing else — one multiplier, mirrored below in RTL, instead of a second
+     set of x values that would have to be kept in step with the first. */
+  --dir-sign: 1;
 }
+[dir="rtl"] .hero-burst { --dir-sign: -1; }
 
 /* The start state: stacked on the composite's centre, small, unlit, blurred. */
 .hero-piece {
@@ -673,7 +678,7 @@
     filter: blur(8px);
   }
   to {
-    transform: translate3d(calc(-50% + var(--hx, 0) * 1cqw), calc(-50% + var(--hy, 0) * 1cqh), 0)
+    transform: translate3d(calc(-50% + var(--hx, 0) * var(--dir-sign, 1) * 1cqw), calc(-50% + var(--hy, 0) * 1cqh), 0)
       scale(var(--hs, 1)) rotate(var(--hr, 0deg));
     opacity: 1;
     filter: blur(0);
@@ -705,20 +710,21 @@
 }
 
 @keyframes heroPieceShadow {
-  0%, 100% { transform: scaleX(1); opacity: .5; }
-  50% { transform: scaleX(.84); opacity: .26; }
+  0%, 100% { transform: scaleX(1); opacity: var(--piece-shadow-opacity, .18); }
+  50% { transform: scaleX(.84); opacity: calc(var(--piece-shadow-opacity, .18) * .72); }
 }
 /* The ground shadow, on its own element so it can shrink and fade on the float's
-   exact duration and start time rather than sharing the float's transform. */
+   exact duration and start time rather than sharing the float's transform.
+   ~60% of the piece's width, so it tracks the artwork's footprint. */
 .hero-piece__shadow {
   position: absolute;
-  inset-inline: 14%;
+  inset-inline: 20%;
   bottom: -7%;
   block-size: 13%;
   border-radius: 50%;
   background: radial-gradient(50% 50% at 50% 50%, rgb(15 42 71 / .34), transparent 70%);
   filter: blur(7px);
-  opacity: .5;
+  opacity: var(--piece-shadow-opacity, .18);
   animation: heroPieceShadow var(--hf, 5s) ease-in-out var(--hfd, 0s) infinite;
 }
 
@@ -728,7 +734,11 @@
   display: block;
   inline-size: 100%;
   block-size: auto;
-  filter: drop-shadow(0 16px 26px rgb(15 42 71 / .26));
+  /* A short, wide shadow reads as the piece resting on the page; a tall one
+     reads as a sticker pasted over it. The narrower tier re-declares this
+     filter under 1024px, where the art is smaller and a soft wide shadow
+     would vanish. */
+  filter: drop-shadow(0 10px 14px rgb(15 42 71 / .18));
 }
 
 /* Without container queries there is no cqw / cqh, so the offsets fall back to
@@ -736,7 +746,7 @@
    stacked, which is the same picture a fraction less fluid. */
 @supports not (container-type: size) {
   .hero-piece {
-    left: calc(50% + var(--hx, 0) * 1%);
+    left: calc(50% + var(--hx, 0) * var(--dir-sign, 1) * 1%);
     top: calc(50% + var(--hy, 0) * 1%);
     transform: scale(var(--hs, 1)) rotate(var(--hr, 0deg));
     opacity: 1;
@@ -870,7 +880,7 @@
      pulse and the parallax all drop, and each piece is pinned to its final
      offset instead. Only a much slower, much shallower float survives. */
   .hero-piece {
-    transform: translate3d(calc(-50% + var(--hx, 0) * 1cqw), calc(-50% + var(--hy, 0) * 1cqh), 0)
+    transform: translate3d(calc(-50% + var(--hx, 0) * var(--dir-sign, 1) * 1cqw), calc(-50% + var(--hy, 0) * 1cqh), 0)
       scale(var(--hs, 1)) rotate(var(--hr, 0deg)) !important;
     opacity: 1 !important;
     filter: none !important;
@@ -991,10 +1001,19 @@
   /* Mobile tier for the hero image: full width of its column, capped, centred,
      and never wider than the column itself, so no phone can scroll sideways. */
   .hero-visual { max-width: 420px; }
-  /* Same tier for the pieces around it: pulled toward the centre and scaled
-     down, so the spread still fits a 320px viewport with room for the
-     headline. Re-declared here for the same reason --rv-distance is. */
+}
+/* The pieces read the *same* narrower tier from tablet down, so the breakpoint
+   is 1024px rather than 767px: between the two, the container is 520px of art
+   with the same narrow-viewport crowding against it. --hxs/--hys/--hss are the
+   array's small-screen values, and --hss is s * 1.15 — a piece is scaled up
+   rather than down there, because the offsets are pulled inward to stay inside
+   the viewport and would otherwise leave it too small to notice. */
+@media (max-width: 1023px) {
   .hero-piece { --hx: var(--hxs); --hy: var(--hys); --hs: var(--hss); }
+  /* Smaller art needs a tighter but *stronger* shadow to still read as contact
+     rather than as a grey haze around the piece. */
+  .hero-piece__img { filter: drop-shadow(0 8px 10px rgb(15 42 71 / .28)); }
+  .hero-burst { --piece-shadow-opacity: .28; }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
   :root {
