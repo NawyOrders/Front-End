@@ -1,0 +1,266 @@
+import type { Dictionary } from "./dictionary";
+
+export const en: Dictionary = {
+  meta: {
+    title: "Nawy Order | Your restaurant's branded app, live in 48 hours",
+    titleTemplate: "%s | Nawy Order",
+    description:
+      "Launch your restaurant's fully branded app in 48 hours without writing a line of code, and take orders directly with zero delivery-platform commission.",
+    ogTitle: "Nawy Order | Your restaurant's branded app, live in 48 hours",
+  },
+  brand: { name: "Nawy Order" },
+  install: { label: "Install the app" },
+
+  /* URL fragments. The single source of truth for every anchor on the page:
+     section components read their id from here and every link builds its
+     href from here, so a slug is changed in one place. */
+  sections: {
+    top: "top",
+    features: "features",
+    how: "how",
+    pricing: "pricing",
+    showcase: "showcase",
+    faq: "faq",
+    contact: "contact",
+  },
+  nav: {
+    mainLabel: "Main navigation",
+    mobileLabel: "Mobile navigation",
+    home: "Home",
+    features: "Features",
+    how: "How it works",
+    pricing: "Pricing",
+    showcase: "Demos",
+    faq: "FAQ",
+    login: "Log in",
+    openMenu: "Open menu",
+    closeMenu: "Close menu",
+    switchLabel: "Switch language",
+  },
+  hero: {
+    badge: "An easy app, live in two days",
+    titleLead: "Your restaurant's own app,",
+    titleAccent: "live in 48 hours",
+    body: "Without writing a single line of code. Launch your own restaurant app with your full visual identity and take orders directly, with no delivery-platform middleman.",
+    ctaPrimary: "Get started",
+    ctaSecondary: "See the demo",
+    visualAlt: "Your own restaurant app with your visual identity: orders, offers and the dishes available to your customers",
+  },
+  stats: [
+    { value: "+50", label: "restaurants joined" },
+    { value: "0%", label: "commission on orders" },
+    { value: "3 days", label: "average turnaround" },
+  ],
+  marquee: {
+    label: "Restaurants running on Nawy Order",
+    restaurants: [
+      "Al-Jameya",
+      "Told Masr",
+      "Helwany El-Assil",
+      "Cafe Lounge",
+      "Beit El-Samak",
+      "Farakh El-Amana",
+      "El-Barka",
+      "Matajem El-Nakheel",
+    ],
+  },
+  problems: {
+    badge: "The problem",
+    title: "Problems restaurant owners hit every day",
+    body: "If your restaurant depends on delivery apps, these are the problems you keep running into.",
+    items: [
+      {
+        icon: "piggy",
+        title: "High commission",
+        text: "Delivery apps take a large cut of every order, which shrinks your profit day by day.",
+      },
+      {
+        icon: "coins",
+        title: "Costly app development",
+        text: "Building a custom app from scratch needs a dev agency, a big budget, and a long wait.",
+      },
+      {
+        icon: "hash",
+        title: "Loss of brand identity",
+        text: "Selling through delivery platforms means customers see their logo instead of yours.",
+      },
+    ],
+  },
+  solution: {
+    badge: "The solution",
+    titleLead: "Nawy Order",
+    titleAccent: "solves it",
+    titleTail: "in 3 simple steps",
+    body: "From subscribing to receiving your finished app, it all happens fast.",
+    stepPrefix: "Step {n}: ",
+    steps: [
+      { title: "Subscribe", text: "Pick the plan that fits your restaurant and sign up in a couple of minutes." },
+      { title: "Send your logo", text: "Send us your restaurant logo, name and preferred colours, and leave the rest to us." },
+      {
+        title: "Receive your app",
+        text: "Your app arrives with your full visual identity, published on Google Play and the App Store.",
+      },
+    ],
+  },
+  features: {
+    badge: "Features",
+    titleLead: "Everything your restaurant needs in",
+    titleAccent: "one app",
+    body: "A complete toolkit to run your restaurant and grow your sales with ease.",
+    items: [
+      { icon: "orders", title: "Online ordering", text: "Take orders directly on your own app, with no middleman." },
+      { icon: "chart", title: "Reports and sales", text: "Track sales and product performance with accurate real-time reports." },
+      { icon: "headset", title: "Ongoing support", text: "A support team that is ready whenever you need them." },
+      { icon: "badge", title: "Coupons and discounts", text: "Run promotions and discount codes to keep customers loyal." },
+    ],
+  },
+  showcase: {
+    badge: "Full customisation",
+    titleLead: "A custom app built for",
+    titleAccent: "your brand only",
+    body: "Just send us your restaurant logo and colours, and we will build an app with your complete visual identity.",
+    mockupAlt: "Preview of the restaurant app on a phone",
+  },
+  pricing: {
+    badge: "Pricing",
+    title: "Plans for every restaurant",
+    body: "Choose the plan that fits the size of your restaurant and get started right away.",
+    periodLabel: "Billing period",
+    monthly: "Monthly",
+    yearly: "Yearly (save 20%)",
+    recommended: "Recommended",
+    perMonth: "EGP / month",
+    perYear: "EGP / year",
+    cta: "Choose plan",
+    scrollHint: "Swipe to see all plans",
+    saveNote: "You save {amount} a year",
+    goToPlan: "Go to the {name} plan",
+    dotsLabel: "Plan selector",
+    plans: [
+      {
+        id: "starter",
+        name: "Starter",
+        audience: "Best for small restaurants",
+        monthly: 9000,
+        yearly: 7200,
+        features: ["Online ordering site", "In-restaurant control panel", "Completely free setup", "Up to 4 branches"],
+        disabledFeatures: ["Android and iOS app"],
+      },
+      {
+        id: "pro",
+        name: "Professional",
+        audience: "Best for mid-size restaurants",
+        monthly: 18000,
+        yearly: 14400,
+        featured: true,
+        features: ["Everything in Starter", "Unlimited orders", "Advanced sales reports", "Android and iOS app"],
+      },
+      {
+        id: "advanced",
+        name: "Advanced",
+        audience: "For chains and large restaurants",
+        monthly: 25000,
+        yearly: 20000,
+        features: [
+          "Everything in Professional",
+          "Multi-branch management",
+          "Dedicated account manager",
+          "24/7 technical support",
+        ],
+      },
+    ],
+  },
+  testimonials: {
+    badge: "What our clients say",
+    title: "What restaurant owners say about us",
+    body: "Real success stories from restaurants running on Nawy Order.",
+    starsLabel: "{n} out of 5 stars",
+    items: [
+      {
+        name: "Ahmed Samy",
+        role: "Owner, Farakh El-Amana",
+        quote:
+          "From the moment we subscribed we saw the difference. The app came out very professional and fast, and our sales went up with no commission taken.",
+        rating: 5,
+      },
+      {
+        name: "Marwa Adel",
+        role: "Owner, Cafe Lounge",
+        quote:
+          "I was hesitant at first, but the team guided me through every step, and my app was ready and looks excellent.",
+        rating: 5,
+      },
+      {
+        name: "Karim El-Shennawy",
+        role: "Owner, Beit El-Samak",
+        quote:
+          "The reports and analytics helped me understand my customers better and run the right offers. Technical support replies very quickly.",
+        rating: 5,
+      },
+    ],
+  },
+  faq: {
+    badge: "FAQ",
+    title: "Frequently asked questions",
+    body: "Answers to the questions restaurant owners ask us most often.",
+    items: [
+      {
+        q: "Is the subscription monthly, or is there an annual commitment?",
+        a: "It is monthly, and you can also pay annually at a discount with no extra commitment.",
+      },
+      {
+        q: "How long until the app is ready?",
+        a: "About 48 hours from receiving your logo and menu. It can take a little longer if you want extra customisation.",
+      },
+      {
+        q: "Is the app published under my own name on Google Play and the App Store?",
+        a: "Yes. We publish it on both stores under your restaurant's name and with your full visual identity.",
+      },
+      {
+        q: "Is there a limit to customising colours and the logo?",
+        a: "No. You have complete freedom over your colours, fonts, logo and the order of your sections.",
+      },
+      {
+        q: "Do you take commission on the orders that come through the app?",
+        a: "No, we do not take any commission. Every order and all of its profit belong entirely to you.",
+      },
+      {
+        q: "What happens if I want to cancel?",
+        a: "You can cancel at any time, and your app keeps working until the end of the paid period.",
+      },
+    ],
+  },
+  cta: {
+    title: "Ready for your restaurant to have its own app?",
+    body: "Scan the code or open the form to send us your details, and our team will get back to you within 24 hours.",
+    qrAlt: "QR code linking to the restaurant sign-up form",
+    qrButton: "Open the form",
+    qrNote: "Opens in a new tab",
+  },
+  footer: {
+    tagline: "A platform that helps restaurant owners build their own branded apps quickly and easily.",
+    copyright: "© 2026 {name}. All rights reserved.",
+    columns: [
+      { title: "Company", links: ["About us", "Our team", "Careers", "Contact us"] },
+      { title: "Product", links: ["Features", "Pricing", "Demos", "FAQ"] },
+      { title: "Legal", links: ["Privacy policy", "Terms and conditions", "Refund policy"] },
+    ],
+    social: { linkedin: "LinkedIn", twitter: "Twitter", instagram: "Instagram", facebook: "Facebook" },
+  },
+  mockup: {
+    myRestaurant: "My Place",
+    welcome: "Welcome,",
+    greeting: "Fancy some food?",
+    promoLabel: "Weekly offers",
+    promoValue: "7 days",
+    cta: "Order now",
+    search: "Search for a dish",
+    filterAll: "All",
+    filterBurger: "Burger",
+    filterPizza: "Pizza",
+    newDishes: "New dishes",
+    dishName: "Classic beef burger",
+    dishDesc: "Cheese, lettuce, house sauce",
+    dishPrice: "EGP 120",
+  },
+};

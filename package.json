@@ -1,26 +1,33 @@
 {
-  "name": "nawy-orders",
-  "version": "0.1.0",
+  "name": "nawy-order-landing",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "typecheck": "tsc --noEmit",
+    "icons": "node scripts/generate-icons.mjs",
+    "qr": "node scripts/generate-qr.mjs",
+    "qr:verify": "node scripts/verify-qr.mjs"
   },
   "dependencies": {
-    "next": "16.3.7",
-    "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "next": "^14.2.35",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.3.7",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "@fontsource/cairo": "^5.3.0",
+    "@types/node": "^26.6.3",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "autoprefixer": "^10.6.1",
+    "jsqr": "^1.4.0",
+    "postcss": "^8.5.28",
+    "qrcode": "^1.5.4",
+    "sharp": "^0.35.5",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^5.9.3"
   }
 }
