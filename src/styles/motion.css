@@ -1,0 +1,1046 @@
+/* ==========================================================================
+   Nawy Order — motion layer.
+
+   The single stylesheet for every animation on the site. Imported once from
+   app/[locale]/layout.tsx: no inline <style> blocks, no JS animation library.
+
+   How it works
+   ------------
+   1. `.reveal` + ONE variant class describe the HIDDEN start state only.
+      `.reveal.is-in` is the single visible end state, so a variant never needs
+      to know anything about its siblings, and `.is-cascade.is-in .reveal`
+      replays that same end state for a container's own children.
+   2. lib/motion/* flips `.is-in` on through ONE shared IntersectionObserver
+      and writes CSS custom properties straight onto elements:
+      `--i` (stagger index), `--scroll` (document), `--p` (per element),
+      `--rx` / `--ry` (pointer tilt), `--mx` / `--my` (card spotlight).
+      Nothing is driven through React state, so no scroll or mousemove
+      handler can re-render a component.
+
+   Only `transform`, `opacity`, `filter`, `clip-path` and the standalone
+   `translate` / `scale` / `rotate` properties are animated. Nothing here
+   animates width, height, top, left, margin or padding.
+   ========================================================================== */
+
+/* --- 1 · Tokens --------------------------------------------------------- */
+:root {
+  --ease: cubic-bezier(.16, 1, .3, 1);
+  --ease-soft: cubic-bezier(.22, 1, .36, 1);
+  --ease-bounce: cubic-bezier(.34, 1.56, .64, 1);
+  --dur: .8s;       /* reveal: opacity / transform / filter */
+  --dur-mask: .9s;  /* reveal: clip-path */
+  --dur-fast: .3s;  /* hover, press, control feedback */
+  --stagger: 90ms;  /* one --i step */
+  --lap: 40s;       /* marquee lap */
+  --float-dur: 5s;  /* idle phone float */
+
+  /* How far a variant travels. One number, re-declared per breakpoint in
+     section 11, so `rv-up` / `rv-start` / `rv-flip` all shorten on a phone
+     without a single call site knowing about screen size. */
+  --rv-distance: 60px;
+  --rv-blur: 14px;
+  --rv-zoom: .85;
+
+  /* Written by lib/motion/scroll.ts and lib/motion/pointer.ts. Declared here
+     so the fallback is always a valid value, in every engine, pre-hydration. */
+  --scroll: 0; /* 0 -> 1 across the whole document */
+  --p: 0;      /* 0 -> 1 across one element's travel through the viewport */
+  --rx: 0deg;  /* pointer tilt   */
+  --ry: 0deg;
+  --mx: 50%;   /* pointer spotlight position inside a card */
+  --my: 50%;
+}
+
+/* --- 2 · The reveal ----------------------------------------------------- */
+.reveal {
+  opacity: 0;
+  transition:
+    opacity var(--dur) var(--ease),
+    transform var(--dur) var(--ease),
+    filter var(--dur) var(--ease),
+    clip-path var(--dur-mask) var(--ease);
+  transition-delay: calc(var(--i, 0) * var(--stagger));
+  will-change: transform, opacity, filter, clip-path;
+}
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  clip-path: inset(0);
+  will-change: auto;
+}
+/* A container that revealed can hand the same end state to its children, so a
+   headline's words, a menu's links and a star row cascade from one observer
+   entry instead of one observer entry each. */
+.is-cascade.is-in .reveal,
+.is-in .accent-bar {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  clip-path: inset(0);
+}
+.is-in .accent-bar {
+  transform: scaleX(1);
+}
+
+/* --- 3 · Variants (hidden start state only) ----------------------------- */
+/* opacity only */
+.rv-fade { transform: none; filter: none; clip-path: inset(0); }
+.rv-up { transform: translate3d(0, var(--rv-distance), 0); }
+.rv-down { transform: translate3d(0, calc(var(--rv-distance) * -1), 0); }
+/* One --rv-distance in from the reading-start side in LTR ... */
+.rv-start { transform: translate3d(calc(var(--rv-distance) * -1), 0, 0); }
+/* ... and from the mirrored side in RTL. */
+[dir="rtl"] .rv-start { transform: translate3d(var(--rv-distance), 0, 0); }
+.rv-end { transform: translate3d(var(--rv-distance), 0, 0); }
+[dir="rtl"] .rv-end { transform: translate3d(calc(var(--rv-distance) * -1), 0, 0); }
+.rv-zoom { transform: scale3d(var(--rv-zoom), var(--rv-zoom), var(--rv-zoom)); }
+.rv-zoom-out { transform: scale3d(1.15, 1.15, 1.15); filter: blur(var(--rv-blur)); }
+.rv-blur { filter: blur(var(--rv-blur)); transform: translate3d(0, calc(var(--rv-distance) * .26), 0); }
+.rv-rotate { transform: translate3d(0, var(--rv-distance), 0) rotate(-6deg) scale3d(.94, .94, .94); transform-origin: 50% 100%; }
+.rv-flip { transform: perspective(900px) translate3d(0, calc(var(--rv-distance) * .6), 0) rotateX(25deg); transform-origin: 50% 0; }
+.rv-mask-up { clip-path: inset(100% 0 0 0); }
+/* Clipped to nothing against the reading-start edge, so the wipe travels with
+   the reading direction. */
+.rv-mask-side { clip-path: inset(0 100% 0 0); }
+[dir="rtl"] .rv-mask-side { clip-path: inset(0 0 0 100%); }
+.rv-pop {
+  transform: scale3d(.6, .6, .6);
+  transition-timing-function: var(--ease-bounce);
+}
+
+/* --- 4 · Split headlines ------------------------------------------------ */
+/* Arabic is cursive and is split by WORD only — never by letter, or the joins
+   break. `.wd` is inline-block so each word can move without the rest. */
+.wd { display: inline-block; vertical-align: top; }
+.hd-part { display: inline-block; }
+
+/* The highlight sweep: an underline that draws from the reading-start edge with
+   scaleX, holds, then fades out — so the resting design is unchanged. */
+.u-draw { position: relative; }
+.u-draw::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: -.08em;
+  height: 3px;
+  border-radius: 999px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform .5s var(--ease) .25s, opacity .4s linear .85s;
+}
+[dir="rtl"] .u-draw::after { transform-origin: 100% 50%; }
+.is-in .u-draw::after { transform: scaleX(1); }
+
+/* The brand bar under every section title. Same 4rem rule as before, drawn
+   with scaleX instead of width. */
+.accent-bar {
+  width: 4rem;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform var(--dur) var(--ease) .1s;
+}
+[dir="rtl"] .accent-bar { transform-origin: 100% 50%; }
+.accent-bar[data-center="true"] { transform-origin: 50% 50%; }
+
+/* --- 5 · Controls ------------------------------------------------------- */
+/* Buttons scale through the standalone `scale` property so `transform` stays
+   free for the reveal variants — the two never fight. globals.css defines
+   `.btn-primary` / `.btn-ghost` with `@apply btn`, which inlines the declarations
+   but not the class name, so they are matched explicitly here. */
+:is(.btn, .btn-primary, .btn-ghost) {
+  --bs: 1;
+  scale: var(--bs);
+  transition-property: scale, background-color, border-color, color, box-shadow;
+  transition-duration: var(--dur-fast), .2s, .2s, .2s, .2s;
+  transition-timing-function: var(--ease), ease, ease, ease, ease;
+  will-change: scale;
+}
+@media (hover: hover) and (pointer: fine) {
+  :is(.btn, .btn-primary, .btn-ghost):hover { --bs: 1.04; }
+  :is(.btn, .btn-primary, .btn-ghost):active { --bs: .96; }
+}
+/* The soft pulse that follows the primary CTA's entrance. */
+.btn-pulse { animation: btnPulse 3.6s var(--ease-soft) 1.4s infinite; }
+@keyframes btnPulse {
+  0%, 100% { box-shadow: 0 10px 24px -8px rgb(255 106 19 / .55); }
+  50% { box-shadow: 0 14px 34px -10px rgb(255 106 19 / .75); }
+}
+
+/* Any non-button link that should still press: the logo, the nav, the footer. */
+.pressable {
+  --ps: 1;
+  scale: var(--ps);
+  transition-property: scale, color, background-color, border-color;
+  transition-duration: var(--dur-fast), .2s, .2s, .2s;
+  transition-timing-function: var(--ease), ease, ease, ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .pressable:hover { --ps: 1.03; }
+  .pressable:active { --ps: .97; }
+}
+
+/* Route change (locale switch): a fade on the wrapper plus a short rise on the
+   inner element. The wrapper stays free of transform / filter on purpose — a
+   transformed ancestor would become the containing block for `position: sticky`
+   and the header would stop sticking to the viewport. 320ms, both halves. */
+@keyframes pageFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes pageRise {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to { opacity: 1; transform: none; }
+}
+.page-fade { animation: pageFade .32s var(--ease) both; }
+.page-rise { animation: pageRise .32s var(--ease) both; }
+@media (prefers-reduced-motion: reduce) {
+  .page-fade, .page-rise { animation: none !important; opacity: 1 !important; }
+}
+
+.icon-shift { transition: translate var(--dur-fast) var(--ease); }
+@media (hover: hover) and (pointer: fine) {
+  :is(.btn, .btn-primary, .btn-ghost):hover .icon-shift { translate: 3px 0; }
+  [dir="rtl"] :is(.btn, .btn-primary, .btn-ghost):hover .icon-shift { translate: -3px 0; }
+  .card:hover .icon-shift,
+  .lift:hover .icon-shift { translate: 2px 0; }
+  [dir="rtl"] .card:hover .icon-shift,
+  [dir="rtl"] .lift:hover .icon-shift { translate: -2px 0; }
+}
+/* The icon tile inside a card reacts to the card's hover. */
+.icon-tilt { transition: scale var(--dur-fast) var(--ease), rotate var(--dur-fast) var(--ease); }
+@media (hover: hover) and (pointer: fine) {
+  .card:hover .icon-tilt,
+  .lift:hover .icon-tilt { scale: 1.12; rotate: -8deg; }
+  [dir="rtl"] .card:hover .icon-tilt,
+  [dir="rtl"] .lift:hover .icon-tilt { rotate: 8deg; }
+}
+
+.nav-link { position: relative; }
+.nav-rule {
+  position: absolute;
+  inset-inline: .75rem;
+  bottom: .25rem;
+  height: 1px;
+  background: currentColor;
+  scale: 1 0;
+  transform-origin: 0 50%;
+  transition: scale var(--dur-fast) var(--ease);
+}
+[dir="rtl"] .nav-rule { transform-origin: 100% 50%; }
+@media (hover: hover) and (pointer: fine) {
+  .nav-link:hover .nav-rule { scale: 1 1; }
+}
+
+/* Hamburger: three rules that morph into one X, driven by the button's state. */
+.burger { position: relative; display: block; inline-size: 1.5rem; block-size: 1.5rem; }
+.burger-line {
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  block-size: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  scale: 1 1;
+  translate: 0 0;
+  rotate: 0deg;
+  opacity: 1;
+  transition: scale var(--dur-fast) var(--ease-soft), translate var(--dur-fast) var(--ease-soft),
+    rotate var(--dur-fast) var(--ease-soft), opacity var(--dur-fast) var(--ease-soft);
+}
+.burger-line:nth-child(1) { translate: 0 -6px; }
+.burger-line:nth-child(2) { translate: 0 0; }
+.burger-line:nth-child(3) { translate: 0 6px; }
+[aria-expanded="true"] .burger-line:nth-child(1),
+[aria-expanded="true"] .burger-line:nth-child(3) { translate: 0 0; rotate: 45deg; }
+[aria-expanded="true"] .burger-line:nth-child(2) { scale: 0 1; opacity: 0; }
+[aria-expanded="true"] .burger-line:nth-child(3) { rotate: -45deg; }
+
+/* Reading progress: one rule whose scale tracks document scroll. */
+.progress-bar {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  block-size: 2px;
+  scale: var(--scroll) 1;
+  transform-origin: 0 50%;
+  will-change: scale;
+}
+[dir="rtl"] .progress-bar { transform-origin: 100% 50%; }
+
+/* Segmented control: the navy pill is one absolutely positioned element that
+   slides on the inline axis. `--px` / `--pw` are measured once per resize by
+   useSlidingIndicator, so the two buttons keep their own natural widths. */
+.seg { position: relative; }
+.seg-ind {
+  position: absolute;
+  inset-block: .25rem;
+  inset-inline-start: 0;
+  inline-size: var(--pw, 50%);
+  translate: var(--px, 0px) 0;
+  transition: translate var(--dur) var(--ease-soft);
+  will-change: translate;
+}
+
+/* The mobile plan selector: dots are identical squares, so the indicator is
+   one slot plus one gap per step. */
+.dots-ind {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 0;
+  inline-size: 2.75rem;
+  block-size: 0.625rem;
+  transform: translate3d(var(--tx, 0px), -50%, 0);
+  transition: transform var(--dur) var(--ease-soft);
+  will-change: transform;
+}
+
+/* The price swapping between periods: fade, lift and unblur. */
+@keyframes swap {
+  from { opacity: 0; translate: 0 10px; filter: blur(6px); }
+  to { opacity: 1; translate: 0 0; filter: blur(0); }
+}
+.swap { animation: swap var(--dur-fast) var(--ease) both; }
+
+/* FAQ chevron: one rotation, one direction. */
+.chev { transition: rotate var(--dur-fast) var(--ease); }
+.acc-item[data-open="true"] .chev { rotate: 180deg; }
+
+/* The saving pill under the yearly price. */
+@keyframes popIn {
+  from { opacity: 0; scale: .85; translate: 0 -4px; }
+  to { opacity: 1; scale: 1; translate: 0 0; }
+}
+.pop { animation: popIn var(--dur-fast) var(--ease) both; }
+
+/* Grid-template-rows accordion + mobile menu: height is never animated. */
+.collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--dur) var(--ease);
+}
+.collapse[data-open="true"] { grid-template-rows: 1fr; }
+/* The rule keeps its 1px box when closed and only goes transparent, so opening
+   the menu never nudges the layout. */
+.collapse[data-open="false"] { border-color: transparent; }
+.collapse > * { min-block-size: 0; overflow: hidden; }
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgb(15 42 71 / 45%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-fast) var(--ease-soft);
+}
+.backdrop[data-open="true"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* The open panel hands its own rows an entrance, because a collapsed panel has a
+   zero-height box the observer can never intersect. Keyed off the panel state, so
+   it replays on every open and survives reduced motion (which drops it). */
+@keyframes panelRow {
+  from { opacity: 0; translate: calc(var(--dir-m, 1) * -28px) 0; }
+  to { opacity: 1; translate: 0 0; }
+}
+.collapse-item { --dir-m: 1; }
+[dir="rtl"] .collapse-item { --dir-m: -1; }
+.collapse[data-open="true"] .collapse-item {
+  animation: panelRow var(--dur) var(--ease) both;
+  animation-delay: calc(var(--i, 0) * 50ms);
+}
+
+/* --- 6 · Cards ---------------------------------------------------------- */
+/* Hover lift and press use `translate` / `scale`, never `transform`, so the
+   reveal variants keep owning `transform`. */
+.card,
+.lift {
+  position: relative;
+  transition:
+    translate var(--dur-fast) var(--ease),
+    scale var(--dur-fast) var(--ease),
+    box-shadow var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease-soft),
+    opacity var(--dur) var(--ease),
+    filter var(--dur) var(--ease),
+    transform var(--dur) var(--ease),
+    clip-path var(--dur-mask) var(--ease);
+  transition-delay: calc(var(--i, 0) * var(--stagger));
+}
+/* Cursor-following spotlight. --mx / --my are written by lib/motion/pointer.ts
+   on hover, so there is no per-card listener. */
+.card::after,
+.lift::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle 16rem at var(--mx) var(--my), rgb(255 106 19 / .13), transparent 70%);
+  transition: opacity var(--dur-fast) var(--ease-soft);
+}
+@media (hover: hover) and (pointer: fine) {
+  .card:hover,
+  .lift:hover {
+    translate: 0 -5px;
+    transition-delay: 0s; /* hover must not wait for the stagger */
+  }
+  .card:active,
+  .lift:active { scale: .98; }
+  .card:hover::after,
+  .lift:hover::after { opacity: 1; }
+}
+
+/* --- 7 · Inline SVG stroke draw-on -------------------------------------- */
+/* pathLength="1" normalises every icon to a single unit, so one rule draws
+   them all. Only stroked paths are selected — the filled icons cannot draw. */
+.icon-draw [stroke] {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset .8s var(--ease);
+}
+.is-in .icon-draw [stroke] { stroke-dashoffset: 0; }
+.is-in .icon-draw [stroke]:nth-child(2) { transition-delay: .12s; }
+.is-in .icon-draw [stroke]:nth-child(3) { transition-delay: .24s; }
+
+/* --- 8 · Parallax + phone fan ------------------------------------------ */
+/* The hero's decorative arc drifts against the page. --p is 0 -> 1 across this
+   section's travel, so the arc moves as it crosses the screen. It is anchored
+   to the bottom edge, so it travels downwards and can never open a gap. */
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .parallax { transform: translate3d(0, calc(var(--p) * var(--sp, 60) * 1px), 0); }
+}
+
+/* Fan: the phones own the entrance, the stage owns the perspective, and the
+   idle float + cursor tilt share one keyframe track on an inner element — two
+   elements, so the two transforms never overwrite each other.
+
+   The split of duties matters:
+     translate  = the scroll-driven opening. Never transitioned, or it would
+                  lag a frame behind the scroll position it is reading.
+     transform  = the entrance and the hover lift. Transitioned. */
+.fan-stage {
+  transform-style: preserve-3d;
+  perspective: 1200px;
+}
+.fan-phone {
+  transform-style: preserve-3d;
+  translate: calc(var(--p) * var(--dir, 1) * var(--fan-open, 18px)) 0;
+  transform:
+    translate3d(calc(var(--x, 0) * var(--dir, 1) * 1px), calc(var(--y, 0) * 1px), 0)
+    rotate(calc(var(--r, 0) * var(--dir, 1) * 1deg))
+    scale(var(--s, 1));
+  transition: transform var(--dur) var(--ease), opacity var(--dur) var(--ease), filter var(--dur) var(--ease);
+  transition-delay: calc(var(--i, 0) * 100ms);
+}
+/* Stacked and defocused in the middle, fanned out over .8s, 100ms apart.
+   The phones are never `.reveal`: this element's transform is the fan, and the
+   entrance is written as a `:not(.is-in)` start state, so the two can never
+   collide. `.is-in` arrives through `data-reveal`, which the document-wide
+   watcher in lib/motion/runtime.ts registers — and if even that never fires the
+   1.5s safety net reveals it anyway. Nothing else may set these three
+   properties, or the entrance would be cancelled before it played. */
+.fan-phone:not(.is-in) {
+  transform: translate3d(0, 0, 0) scale(.86);
+  opacity: 0;
+  filter: blur(14px);
+}
+/* --dir mirrors the spread so RTL fans the other way, with the same picture. */
+[dir="rtl"] .fan-viewport { --dir: -1; }
+
+/* Idle float + cursor tilt on one keyframe track, so the two compose instead of
+   fighting: each phone has its own duration, delay, distance and wobble, and
+   its own depth factor --d so the tilt parallaxes through the stack. */
+@keyframes fanFloat {
+  0%, 100% {
+    transform:
+      translate3d(0, 0, 0)
+      rotateX(calc(var(--rx) * var(--d, 1)))
+      rotateY(calc(var(--ry) * var(--d, 1)))
+      rotate(0deg);
+  }
+  50% {
+    transform:
+      translate3d(0, var(--fy, -10px), 0)
+      rotateX(calc(var(--rx) * var(--d, 1)))
+      rotateY(calc(var(--ry) * var(--d, 1)))
+      rotate(var(--fw, .5deg));
+  }
+}
+.fan-float {
+  animation: fanFloat var(--float-dur) ease-in-out infinite;
+  animation-delay: var(--fdelay, 0s);
+  will-change: transform;
+}
+/* Hovering one phone lifts it to the front and dims the rest. */
+@media (hover: hover) and (pointer: fine) {
+  .fan-stage:has(.fan-phone:hover) .fan-phone:not(:hover) { opacity: .45; }
+  .fan-stage .fan-phone:hover {
+    z-index: 40;
+    transition-delay: 0s;
+    transform:
+      translate3d(calc(var(--x, 0) * var(--dir, 1) * 1px), -14px, 0)
+      rotate(calc(var(--r, 0) * var(--dir, 1) * 1deg))
+      scale(calc(var(--s, 1) * 1.06));
+  }
+}
+/* --- 9 · The hero visual ------------------------------------------------- */
+/* One image in three nested layers, each with exactly one transform to own, so
+   the entrance, the cursor tilt and the idle float compose instead of
+   overwriting one another:
+
+     .hero-visual        the site's reveal only. `.reveal` + `.rv-zoom-out`, the
+                         one `data-reveal` watcher and the same --ease / --dur /
+                         --i stagger as the headline and the buttons.
+     .hero-visual__tilt  the scroll parallax and the 3D tilt. Reads --scroll
+                         (written on <html> by the one scroll listener, so it is
+                         inherited and needs no hook of its own) on every screen,
+                         and --rx / --ry (written by useMouseTilt) on desktop.
+                         Where there is no cursor it takes over with the slow
+                         sway below.
+     .hero-visual__img   the idle float and its drop-shadow.
+
+   `translate` carries the scroll parallax and `transform` the tilt, the same
+   split as `.fan-phone`, and neither is transitioned — they read a value that
+   is rewritten every frame, so a transition would only lag behind it. Hover uses
+   the standalone `scale`, which leaves the float's `transform` alone. */
+
+/* The brand glow behind the image: it fades in with the reveal, then breathes. */
+.hero-visual {
+  --hv-parallax: -30px; /* document scroll progress -> 0 … -30px */
+  --hv-float-dur: 6s;
+  position: relative;
+  display: flex;
+  width: 100%;
+  max-width: 420px; /* mobile tier; widened in section 12 */
+  margin-inline: auto; /* centred in its own column, LTR and RTL alike */
+  justify-content: center;
+  /* `perspective` here is what layer 2's rotateX / rotateY are read against —
+     a parent element's `perspective` does not reach a grandchild unless the
+     3D context is kept alive, hence preserve-3d. `.reveal`'s own `filter`
+     flattens this for the length of the entrance and nothing else. */
+  perspective: 1200px;
+  transform-style: preserve-3d;
+}
+.hero-visual::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset-block: 6%;
+  inset-inline: -8%;
+  border-radius: 50%;
+  background: radial-gradient(50% 50% at 50% 50%, rgb(255 106 19 / .3), transparent 70%);
+  filter: blur(20px);
+  opacity: 0;
+  pointer-events: none;
+  /* `--i` is a custom property, so the pseudo-element inherits the reveal's
+     stagger index and the glow fades in on exactly the parent's delay. */
+  transition: opacity var(--dur) var(--ease) calc(var(--i, 0) * var(--stagger));
+}
+.hero-visual.is-in::before {
+  opacity: .85;
+  animation: heroVisualGlow 5.4s var(--ease-soft) 1.2s infinite;
+}
+@keyframes heroVisualGlow {
+  0%, 100% { opacity: .85; scale: 1; }
+  50% { opacity: 1; scale: 1.07; }
+}
+
+/* Layer 2. `translate` is the scroll parallax and runs on every screen; `transform`
+   is the 3D turn, which is a cursor tilt on desktop and the slow automatic sway
+   everywhere else. Neither is transitioned: both read a value that is rewritten
+   every frame (or, for the sway, one that must stay independent of the tilt). */
+@keyframes heroVisualSway {
+  from { transform: rotateX(-4deg) rotateY(4deg); }
+  to { transform: rotateX(4deg) rotateY(-4deg); }
+}
+.hero-visual__tilt {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  transform-style: preserve-3d;
+  translate: 0 calc(var(--scroll, 0) * var(--hv-parallax, -30px));
+  animation: heroVisualSway 8s var(--ease-soft) infinite alternate;
+  will-change: transform;
+}
+
+/* Layer 3. */
+@keyframes heroVisualFloat {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -12px, 0); }
+}
+.hero-visual__img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  object-fit: contain;
+  animation: heroVisualFloat var(--hv-float-dur) ease-in-out infinite;
+  filter: drop-shadow(0 22px 32px rgb(15 42 71 / .22));
+  will-change: transform;
+}
+
+/* The soft ellipse the image sits on. It shares the float's duration and start
+   time, so it shrinks and softens exactly as the image lifts. */
+@keyframes heroVisualShadow {
+  0%, 100% { transform: scaleX(1); opacity: .5; }
+  50% { transform: scaleX(.86); opacity: .28; }
+}
+.hero-visual__tilt::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset-inline: 14%;
+  bottom: -1.25rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: radial-gradient(50% 50% at 50% 50%, rgb(15 42 71 / .4), transparent 70%);
+  filter: blur(9px);
+  opacity: .5;
+  pointer-events: none;
+  animation: heroVisualShadow var(--hv-float-dur) ease-in-out infinite;
+}
+
+/* Desktop tier: the tilt and the parallax turn on. Both are already gated again
+   in JS by canPointFine(), so the two agree. The sway is dropped here because the
+   cursor is what drives the 3D turn from this width up. */
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .hero-visual__tilt {
+    animation: none;
+    transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    will-change: transform;
+  }
+  .hero-visual__img {
+    scale: 1;
+    transition: scale var(--dur-fast) var(--ease);
+  }
+  .hero-visual:hover .hero-visual__img { scale: 1.03; }
+}
+
+/* --- 9b · The hero pieces (burst → float) -------------------------------- */
+/* The single food images parked behind the composite, which fly out of it on the
+   hero's reveal and then float for as long as the page is open.
+
+   Four nested things, so no two of them ever write the same property:
+     .hero-burst        the layer. inset 0 on .hero-visual, inert to the pointer,
+                        aria-hidden, and z-index 0 against the composite's z 1 —
+                        which is what makes a piece invisible until it leaves.
+                        `container-type: size` is what lets the offsets below be
+                        expressed in cqw / cqh, i.e. as a share of this box rather
+                        than as a pixel distance that would drift per breakpoint.
+     .hero-piece        position + the burst. Anchored at the container's centre;
+                        the transform is the only thing that moves it, so it starts
+                        exactly on top of the artwork and ends at its offset.
+     .hero-piece__float the endless idle float (transform) and the 12s pulse
+                        (the standalone `scale`, which composes with it).
+     .hero-piece__img   the artwork and its own drop-shadow. */
+
+.hero-burst {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  container-type: size;
+  /* The reading direction flips the horizontal half of the arrangement and
+     nothing else — one multiplier, mirrored below in RTL, instead of a second
+     set of x values that would have to be kept in step with the first. */
+  --dir-sign: 1;
+}
+[dir="rtl"] .hero-burst { --dir-sign: -1; }
+
+/* The start state: stacked on the composite's centre, small, unlit, blurred. */
+.hero-piece {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  inline-size: var(--hw, 24cqw);
+  transform: translate3d(-50%, -50%, 0) scale(.3) rotate(0deg);
+  opacity: 0;
+  filter: blur(8px);
+  /* The parallax rides the standalone `translate`, which is applied before
+     `transform`, so scrolling can never interrupt the burst. */
+  translate: 0 calc(var(--scroll, 0) * var(--hp, 1) * -1px);
+}
+@keyframes heroPieceBurst {
+  from {
+    transform: translate3d(-50%, -50%, 0) scale(.3) rotate(0deg);
+    opacity: 0;
+    filter: blur(8px);
+  }
+  to {
+    transform: translate3d(calc(-50% + var(--hx, 0) * var(--dir-sign, 1) * 1cqw), calc(-50% + var(--hy, 0) * 1cqh), 0)
+      scale(var(--hs, 1)) rotate(var(--hr, 0deg));
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+/* Keyed off the reveal the hero already has: one observer entry, no new watcher,
+   and the pieces arrive as a stagger because --hd differs per piece. */
+.hero-visual.is-in .hero-piece {
+  animation: heroPieceBurst .9s var(--ease-bounce) var(--hd, 0ms) both;
+}
+
+@keyframes heroPieceFloat {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(calc(var(--hwob, 1.6deg) * -1)); }
+  50% { transform: translate3d(0, var(--dfy, -10px), 0) rotate(var(--hwob, 1.6deg)); }
+}
+/* One gentle breath every 12s, on `scale` so the float's `transform` is untouched. */
+@keyframes heroPiecePulse {
+  0%, 100% { scale: 1; }
+  25% { scale: var(--hamp, 1.07); }
+  75% { scale: 1; }
+}
+.hero-piece__float {
+  position: relative;
+  display: block;
+  animation:
+    heroPieceFloat var(--hf, 5s) ease-in-out var(--hfd, 0s) infinite,
+    heroPiecePulse 12s var(--ease-soft) var(--hfd, 0s) infinite;
+  will-change: transform;
+}
+
+@keyframes heroPieceShadow {
+  0%, 100% { transform: scaleX(1); opacity: var(--piece-shadow-opacity, .18); }
+  50% { transform: scaleX(.84); opacity: calc(var(--piece-shadow-opacity, .18) * .72); }
+}
+/* The ground shadow, on its own element so it can shrink and fade on the float's
+   exact duration and start time rather than sharing the float's transform.
+   ~60% of the piece's width, so it tracks the artwork's footprint. */
+.hero-piece__shadow {
+  position: absolute;
+  inset-inline: 20%;
+  bottom: -7%;
+  block-size: 13%;
+  border-radius: 50%;
+  background: radial-gradient(50% 50% at 50% 50%, rgb(15 42 71 / .34), transparent 70%);
+  filter: blur(7px);
+  opacity: var(--piece-shadow-opacity, .18);
+  animation: heroPieceShadow var(--hf, 5s) ease-in-out var(--hfd, 0s) infinite;
+}
+
+.hero-piece__img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  /* A short, wide shadow reads as the piece resting on the page; a tall one
+     reads as a sticker pasted over it. The narrower tier re-declares this
+     filter under 1024px, where the art is smaller and a soft wide shadow
+     would vanish. */
+  filter: drop-shadow(0 10px 14px rgb(15 42 71 / .18));
+}
+
+/* Without container queries there is no cqw / cqh, so the offsets fall back to
+   the inset the same percentages describe. The pieces land spread instead of
+   stacked, which is the same picture a fraction less fluid. */
+@supports not (container-type: size) {
+  .hero-piece {
+    left: calc(50% + var(--hx, 0) * var(--dir-sign, 1) * 1%);
+    top: calc(50% + var(--hy, 0) * 1%);
+    transform: scale(var(--hs, 1)) rotate(var(--hr, 0deg));
+    opacity: 1;
+    filter: none;
+  }
+  .hero-visual.is-in .hero-piece { animation: none; }
+}
+
+/* --- 9c · Food decor in the section backgrounds -------------------------- */
+/* The blurred pieces that sit behind the copy in the sections. They read as
+   shadows rather than as pictures: a far piece is a fifth visible and softened,
+   a near one is barely softened at all, and every one of them is below the
+   content — the sections' own `relative` wrapper is what puts the text on top.
+
+   Same three-layer discipline as the hero pieces: the wrapper carries the
+   reveal and the position, the middle span carries the endless float and the
+   scroll parallax, and the img carries nothing but the art and its blur. The
+   `--d*` variables are written per piece by FoodDecor (SectionTitle.tsx).
+
+   `inset-inline-*` rather than left/right, so the whole arrangement mirrors
+   with the reading direction and neither locale gets a one-sided layout. */
+.decor {
+  position: absolute;
+  z-index: 0;
+  inset-block-start: var(--top, 50%);
+  inline-size: var(--dw, clamp(56px, 12vw, 180px));
+  pointer-events: none;
+}
+/* The bleed is a fraction of the piece's own fluid width, not of the section:
+   inset-* percentages resolve against the section, which would push a 56px piece
+   a full 100px off a 1400px section while barely moving it on a 320px phone.
+   Multiplying by --dw keeps "-0.3" meaning "a third of it hangs off" at every
+   width, which is what the arrangement was actually drawn for. */
+.decor--start { inset-inline-start: calc(var(--dx, -.3) * var(--dw)); }
+.decor--end { inset-inline-end: calc(var(--dx, -.3) * var(--dw)); }
+
+/* The drift is a slow rotation around the piece's own resting tilt, so a piece
+   that is laid over at 11deg sways through 6deg either side of it and never
+   straightens up mid-page. */
+@keyframes decorFloat {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(calc(var(--rz, 0deg) - var(--dr, 5deg))); }
+  50% { transform: translate3d(0, var(--dfy, -10px), 0) rotate(calc(var(--rz, 0deg) + var(--dr, 5deg))); }
+}
+.decor__float {
+  position: relative;
+  display: block;
+  translate: 0 calc(var(--scroll, 0) * var(--p, 10) * -1px);
+  animation: decorFloat var(--f, 8s) ease-in-out var(--fd, 0s) infinite;
+  will-change: transform;
+}
+.decor__img {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  opacity: var(--op, .25);
+  filter: blur(var(--blur, 4px)) drop-shadow(0 16px 26px rgb(15 42 71 / .22));
+}
+
+/* Piece count per screen: two at the edges on a phone, one more from tablet,
+   the rest from desktop. The pieces that only exist on the wider tiers are the
+   ones that would sit over a narrow column of copy, so a phone never gets one. */
+@media (max-width: 767px) {
+  .decor--md,
+  .decor--lg { display: none; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .decor--lg { display: none; }
+}
+
+/* An infinite loop that is nowhere near the viewport is frozen, not removed:
+   lib/motion/runtime.ts flips .is-motion-off from an IntersectionObserver with a
+   generous root margin, so a piece still runs as it comes into view. */
+/* `!important` because app/globals.css ends its own reduced-motion block with
+   `* { animation: none !important }`, and this rule has to out-rank that to keep
+   a loop actually pausable in every tier. */
+[data-pause].is-motion-off,
+[data-pause].is-motion-off * { animation-play-state: paused !important; }
+
+/* --- 10 · Marquee -------------------------------------------------------- */
+@keyframes marquee {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
+}
+.marquee-track { animation: marquee var(--lap) linear infinite; will-change: transform; }
+.marquee:hover .marquee-track { animation-play-state: paused; }
+/* The loop runs the other way in RTL, so the names always travel with the
+   reading direction. */
+[dir="rtl"] .marquee-track { animation-direction: reverse; }
+
+@keyframes breathe {
+  0%, 100% { scale: 1; }
+  50% { scale: 1.012; }
+}
+.breathe { animation: breathe 6s ease-in-out infinite; }
+
+@keyframes dotPulse {
+  0%, 100% { scale: 1; opacity: 1; }
+  50% { scale: 1.35; opacity: .55; }
+}
+.mq-dot { animation: dotPulse 2.4s var(--ease-soft) infinite; }
+
+/* --- 11 · Reduced motion ------------------------------------------------ */
+/* Floats, parallax, tilt, masks and flips off; fades stay. Any element that
+   has not been revealed yet is forced visible, so nothing can be stranded at
+   opacity 0. */
+@media (prefers-reduced-motion: reduce) {
+  /* The fan must still be *there* under reduced motion — only the movement goes.
+     The mobile menu and the FAQ panel open instantly instead of sliding. */
+  .fan-phone,
+  .fan-phone:not(.is-in) {
+    opacity: 1 !important;
+    filter: none !important;
+    transform:
+      translate3d(calc(var(--x, 0) * var(--dir, 1) * 1px), calc(var(--y, 0) * 1px), 0)
+      rotate(calc(var(--r, 0) * var(--dir, 1) * 1deg))
+      scale(var(--s, 1)) !important;
+  }
+  .fan-float,
+  .hero-visual__img,
+  .hero-visual__tilt::after,
+  .hero-visual::before,
+  .parallax,
+  .marquee-track,
+  .breathe,
+  .mq-dot,
+  .btn-pulse,
+  .collapse-item {
+    animation: none !important;
+  }
+  /* The hero pieces must still be *there* under reduced motion: the burst, the
+     pulse and the parallax all drop, and each piece is pinned to its final
+     offset instead. Only a much slower, much shallower float survives. */
+  .hero-piece {
+    transform: translate3d(calc(-50% + var(--hx, 0) * var(--dir-sign, 1) * 1cqw), calc(-50% + var(--hy, 0) * 1cqh), 0)
+      scale(var(--hs, 1)) rotate(var(--hr, 0deg)) !important;
+    opacity: 1 !important;
+    filter: none !important;
+    translate: none !important;
+  }
+  /* Only the idle loops come back here, slower and shallower. They need the
+     `!important` to beat globals.css's `* { animation: none !important }`; the
+     shorthand is safe here precisely because the pause rule above is itself
+     `!important`, so it still wins on specificity and the loops stay pausable. */
+  .hero-piece__float {
+    --dfy: -4px;
+    --hwob: 1deg;
+    animation: heroPieceFloat calc(var(--hf, 5s) * 2.5) ease-in-out var(--hfd, 0s) infinite !important;
+  }
+  .hero-piece__shadow {
+    animation: heroPieceShadow calc(var(--hf, 5s) * 2.5) ease-in-out var(--hfd, 0s) infinite !important;
+  }
+  .decor__float {
+    --dr: 2deg;
+    --dfy: -4px;
+    animation: decorFloat calc(var(--f, 8s) * 2.5) ease-in-out var(--fd, 0s) infinite !important;
+    translate: none !important;
+  }
+  /* The hero image must still be *there* under reduced motion — only the
+     movement goes. Reveal, tilt, parallax, float and the glow's pulse all drop;
+     the glow simply stays on instead of breathing. */
+  .hero-visual__img {
+    transform: none !important;
+    filter: drop-shadow(0 22px 32px rgb(15 42 71 / .22)) !important;
+  }
+  .hero-visual__tilt {
+    translate: none !important;
+    transform: none !important;
+  }
+  .hero-visual__tilt::after { transform: none !important; opacity: .5 !important; }
+  .hero-visual::before { opacity: .85 !important; }
+  .rv-blur,
+  .rv-zoom-out,
+  .rv-flip,
+  .rv-rotate,
+  .rv-mask-up,
+  .rv-mask-side,
+  .u-draw::after {
+    filter: none !important;
+    clip-path: none !important;
+  }
+  .rv-flip,
+  .rv-rotate,
+  .rv-up,
+  .rv-down,
+  .rv-start,
+  .rv-end,
+  .rv-zoom,
+  .rv-zoom-out,
+  .rv-pop,
+  .wd,
+  .accent-bar {
+    transform: none !important;
+  }
+  /* Floats, parallax, tilt, masks and flips off; nothing moves. Anything with a
+     hidden start state is forced visible, so a missing or slow `.is-in` can
+     never strand content at opacity 0. */
+  .reveal,
+  .reveal.is-in,
+  .is-cascade.is-in .reveal,
+  .wd,
+  .accent-bar {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    clip-path: none !important;
+    transition-duration: .2s !important;
+    transition-delay: 0s !important;
+  }
+  .icon-draw [stroke] { stroke-dashoffset: 0 !important; transition: none !important; }
+}
+
+/* --- 12 · Touch and small screens --------------------------------------- */
+/* Tilt, the spotlight and the parallax transform are already behind the
+   pointer media queries above; this is the belt to that pair of braces. */
+/* --- 12 — Touch, small screens and breakpoints ------------------------- */
+/* Three tiers, one place. `--rv-distance` (and the blur / zoom that scale with
+   it) is re-declared per tier, so every variant in section 3 adapts to the
+   screen without one call site knowing the width.
+
+     mobile   320-767px   short travel, no flip / rotate / side wipe
+     tablet   768-1023px  medium travel, no pointer effects
+     desktop  1024px+     full travel + tilt, parallax, spotlight, progress
+
+   The pointer-driven effects are additionally gated on
+   `(hover: hover) and (pointer: fine)` above, so a touch laptop at desktop
+   width still gets the plain fades. */
+@media (max-width: 767px) {
+  :root {
+    --rv-distance: 24px;
+    --rv-blur: 8px;
+    --rv-zoom: .92;
+    --stagger: 70ms;
+  }
+  /* A 3D flip, a tilt or a side wipe reads as a glitch on a small screen, so
+     these four fall back to the short vertical entrance of `rv-up`. */
+  .rv-flip,
+  .rv-rotate,
+  .rv-mask-side,
+  .rv-zoom-out {
+    transform: translate3d(0, var(--rv-distance), 0);
+    filter: none;
+    clip-path: none;
+  }
+  .rv-zoom-out { filter: blur(0) !important; }
+  /* Nothing on a phone may push the page sideways. */
+.rv-start,
+  [dir="rtl"] .rv-start,
+  .rv-end,
+  [dir="rtl"] .rv-end {
+    transform: translate3d(0, var(--rv-distance), 0);
+  }
+  /* Mobile tier for the hero image: full width of its column, capped, centred,
+     and never wider than the column itself, so no phone can scroll sideways. */
+  .hero-visual { max-width: 420px; }
+}
+/* The pieces read the *same* narrower tier from tablet down, so the breakpoint
+   is 1024px rather than 767px: between the two, the container is 520px of art
+   with the same narrow-viewport crowding against it. --hxs/--hys/--hss are the
+   array's small-screen values, and --hss is s * 1.15 — a piece is scaled up
+   rather than down there, because the offsets are pulled inward to stay inside
+   the viewport and would otherwise leave it too small to notice. */
+@media (max-width: 1023px) {
+  .hero-piece { --hx: var(--hxs); --hy: var(--hys); --hs: var(--hss); }
+  /* Smaller art needs a tighter but *stronger* shadow to still read as contact
+     rather than as a grey haze around the piece. */
+  .hero-piece__img { filter: drop-shadow(0 8px 10px rgb(15 42 71 / .28)); }
+  .hero-burst { --piece-shadow-opacity: .28; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  :root {
+    --rv-distance: 40px;
+    --rv-blur: 11px;
+    --rv-zoom: .88;
+  }
+  /* Tablet keeps the flip and the rotate — there is room for them — but no
+     pointer effect runs: the hover rules and lib/motion hooks stay off. */
+  .card:hover, .lift:hover { translate: none; }
+  .card:hover::after, .lift:hover::after { opacity: 0; }
+  .hero-visual { max-width: 520px; }
+}
+@media (min-width: 1024px) {
+  .hero-visual { max-width: 640px; }
+}
+/* Tilt, the spotlight and the parallax transform are already behind the
+   pointer media queries above; this is the belt to that pair of braces. */
+@media (hover: none), (pointer: coarse), (max-width: 1023px) {
+  .card:hover, .lift:hover { translate: none; }
+  .card:hover::after, .lift:hover::after { opacity: 0; }
+  .marquee:hover .marquee-track { animation-play-state: running; }
+  /* The fan's scroll-driven spread is a pointer-tier effect too: below desktop
+     the three phones simply sit in their fanned position. */
+  .fan-phone { translate: none; }
+  /* Same for the hero image: no tilt and no hover lift, but the scroll parallax
+     and the automatic sway are pure CSS and run at every width, so only the
+     cursor-driven `transform` is dropped. */
+  .hero-visual__img { scale: 1; }
+}

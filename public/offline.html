@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0F2A47" />
+    <title>مفيش اتصال | Nawy Order</title>
+    <!--
+      The offline shell. Self-contained on purpose: no external stylesheet, no
+      font request, no image request. It is precached by sw.js and shown when a
+      navigation cannot reach the network, so anything it needs must already be
+      inline. Colours are the two real brand tokens from tailwind.config.ts
+      (cream #FFF7EA, navy #0F2A47, accent #FF6A13) and the mark is the same
+      one app/icon.svg ships.
+    -->
+    <style>
+      :root {
+        --cream: #fff7ea;
+        --navy: #0f2a47;
+        --brand: #ff6a13;
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        padding: 2rem 1.25rem;
+        background: var(--cream);
+        color: var(--navy);
+        /* The site's own fallback order: no webfont, because there is no
+           network to fetch one from. */
+        font-family: "Segoe UI", Tahoma, system-ui, -apple-system, sans-serif;
+        line-height: 1.7;
+        text-align: center;
+        -webkit-font-smoothing: antialiased;
+      }
+      .shell { max-width: 28rem; display: grid; gap: 1.25rem; justify-items: center; }
+      .mark {
+        display: grid;
+        place-items: center;
+        width: 4rem;
+        height: 4rem;
+        border-radius: 1rem;
+        background: var(--brand);
+        box-shadow: 0 10px 24px -8px rgb(255 106 19 / .55);
+      }
+      .mark svg { width: 2.5rem; height: 2.5rem; }
+      h1 { margin: 0; font-size: 1.5rem; font-weight: 800; line-height: 1.35; }
+      p { margin: 0; color: #5b6b7f; }
+      .en { direction: ltr; }
+      button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2.75rem;
+        margin-top: .5rem;
+        padding: 0 1.5rem;
+        border: 0;
+        border-radius: .75rem;
+        background: var(--brand);
+        color: #fff;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background-color .2s ease, scale .3s cubic-bezier(.16, 1, .3, 1);
+      }
+      button:hover { background: #e85a06; }
+      button:active { scale: .96; }
+      @media (prefers-reduced-motion: reduce) {
+        button { transition: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 3v8a2 2 0 0 0 4 0V3M9 3v18M16 3c-2 2-3 5-3 8h3v10" />
+        </svg>
+      </span>
+      <h1>مفيش اتصال بالإنترنت</h1>
+      <p>محتاجين نت عشان نحمّل الصفحة دي. اتأكد إن اتصالك شغال وبعدين حاول تاني.</p>
+      <p class="en" lang="en">You need a connection to load this page. Check your network, then try again.</p>
+      <button id="retry" type="button">حاول تاني &middot; Try again</button>
+    </main>
+    <script>
+      (function () {
+        var retry = document.getElementById("retry");
+        var reload = function () {
+          location.reload();
+        };
+        retry.addEventListener("click", reload);
+        // Coming back online is the same intent as pressing the button.
+        addEventListener("online", reload);
+      })();
+    </script>
+  </body>
+</html>
