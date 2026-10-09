@@ -2,7 +2,7 @@
 /**
  * PWA icon generator — one-off, build-time only.
  *
- * Rasterises the existing brand mark (app/icon.svg: an #FF6A13 rounded square
+ * Rasterises the existing brand mark (app/icon.svg: an #E43820 rounded square
  * with the white "N" stroke path) into the four files the web app manifest and
  * iOS need. The mark is never redrawn: it is the same 32-unit viewBox as the
  * shipped favicon, so scaling is strictly proportional and nothing is
@@ -25,7 +25,7 @@ mkdirSync(outDir, { recursive: true });
 
 /* Kept byte-for-byte in step with app/icon.svg and the inline mark in
    components/landing/Logo.tsx. */
-const ORANGE = "#FF6A13";
+const ORANGE = "#E43820";
 const NAVY = "#0F2A47";
 const TILE = `<rect width="32" height="32" rx="8" fill="${ORANGE}"/>`;
 const GLYPH = `<g transform="translate(7.1 7.1) scale(.74)">

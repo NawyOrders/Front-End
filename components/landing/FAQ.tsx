@@ -17,9 +17,12 @@ const decor: DecorPiece[] = [
   { src: "/image%203.png", w: 213, h: 227, side: "end", top: 76,  dx: 0.04 , size: 1, rot: 9, drift: 5, lift: -9, blur: 1, op: 0.48, dur: 6.6, delay: -0.4, par: -13, tier: "lg" },
 ];
 
-const FaqItem = memo(function FaqItem({ item, i, open, onToggle, ids }: { item: Item; i: number; open: boolean; onToggle: () => void; ids: { button: string; panel: string } }) {
+const FaqItem = memo(function FaqItem({ item, open, onToggle, ids }: { item: Item; open: boolean; onToggle: () => void; ids: { button: string; panel: string } }) {
+  /* The questions must always stay readable, so the accordion rows carry no
+     `reveal` classes: the motion layer's `opacity: 0` start state (or a reveal
+     that never fires) must never be able to leave them invisible. */
   return (
-    <li data-reveal data-open={open ? "true" : "false"} style={stagger(i)} className="card acc-item reveal rv-up overflow-hidden">
+    <li data-open={open ? "true" : "false"} className="card acc-item overflow-hidden">
       <h3>
         <button id={ids.button} type="button" aria-expanded={open} aria-controls={ids.panel} onClick={onToggle}
           className="pressable flex min-h-14 w-full items-center justify-between gap-4 px-5 py-3 text-start text-sm font-bold leading-6 text-navy sm:text-base">
@@ -60,7 +63,6 @@ export function FAQ({ dict }: { dict: Dictionary }) {
             <FaqItem
               key={f.q}
               item={f}
-              i={i}
               open={open === i}
               onToggle={() => setOpen(open === i ? null : i)}
               ids={{ button: `${base}-h${i}`, panel: `${base}-b${i}` }}

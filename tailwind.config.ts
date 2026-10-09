@@ -6,7 +6,7 @@ const config: Config = {
     extend: {
       colors: {
         navy: { DEFAULT: "#0F2A47", 800: "#15355A", 900: "#0A1F36" },
-        brand: { DEFAULT: "#FF6A13", dark: "#E85A06", soft: "#FFE9D6" },
+        brand: { DEFAULT: "#E43820", dark: "#C92F18", soft: "#FCE4D6" },
         cream: { DEFAULT: "#FFF7EA", 100: "#FFFBF4", 200: "#FBEBD3" },
         beige: "#F6E4C8",
         ink: { DEFAULT: "#0F2A47", muted: "#5B6B7F" },
@@ -20,7 +20,7 @@ const config: Config = {
       boxShadow: {
         card: "0 8px 24px -12px rgba(15,42,71,.18)",
         pop: "0 24px 60px -24px rgba(15,42,71,.35)",
-        cta: "0 10px 24px -8px rgba(255,106,19,.55)",
+        cta: "0 10px 24px -8px rgba(228,56,32,.55)",
       },
     },
   },

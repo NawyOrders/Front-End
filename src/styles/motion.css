@@ -164,8 +164,8 @@
 /* The soft pulse that follows the primary CTA's entrance. */
 .btn-pulse { animation: btnPulse 3.6s var(--ease-soft) 1.4s infinite; }
 @keyframes btnPulse {
-  0%, 100% { box-shadow: 0 10px 24px -8px rgb(255 106 19 / .55); }
-  50% { box-shadow: 0 14px 34px -10px rgb(255 106 19 / .75); }
+  0%, 100% { box-shadow: 0 10px 24px -8px rgb(228 56 32 / .55); }
+  50% { box-shadow: 0 14px 34px -10px rgb(228 56 32 / .75); }
 }
 
 /* Any non-button link that should still press: the logo, the nav, the footer. */
@@ -382,7 +382,7 @@
   border-radius: inherit;
   pointer-events: none;
   opacity: 0;
-  background: radial-gradient(circle 16rem at var(--mx) var(--my), rgb(255 106 19 / .13), transparent 70%);
+  background: radial-gradient(circle 16rem at var(--mx) var(--my), rgb(228 56 32 / .13), transparent 70%);
   transition: opacity var(--dur-fast) var(--ease-soft);
 }
 @media (hover: hover) and (pointer: fine) {
@@ -535,7 +535,7 @@
   inset-block: 6%;
   inset-inline: -8%;
   border-radius: 50%;
-  background: radial-gradient(50% 50% at 50% 50%, rgb(255 106 19 / .3), transparent 70%);
+  background: radial-gradient(50% 50% at 50% 50%, rgb(228 56 32 / .3), transparent 70%);
   filter: blur(20px);
   opacity: 0;
   pointer-events: none;

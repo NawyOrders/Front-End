@@ -34,7 +34,7 @@ function DishCard({ dict, tone }: { dict: Dictionary; tone: Tone }) {
 }
 
 export const PhoneMockup = memo(function PhoneMockup({ dict, alt, tone = "warm", className = "" }: { dict: Dictionary; alt: string; tone?: Tone; className?: string }) {
-  const accent = tone === "warm" ? "from-brand to-[#FF9A3D]" : "from-sky-500 to-cyan-400";
+  const accent = tone === "warm" ? "from-brand to-[#E4684A]" : "from-sky-500 to-cyan-400";
   const screen = tone === "warm" ? "bg-[#FFF8EE]" : "bg-[#EAF7FB]";
   return (
     <div className={`relative aspect-[9/18.5] rounded-[2rem] bg-navy p-[6px] shadow-pop ${className}`} role="img" aria-label={alt}>
