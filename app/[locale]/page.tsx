@@ -50,7 +50,7 @@ export default function Page({ params }: { params: { locale: string } }) {
         <FAQ dict={dict} />
         <FinalCTA dict={dict} />
       </main>
-      <Footer dict={dict} />
+      <Footer dict={dict} locale={locale} />
       {/* Renders nothing. Owns the localized fragment on load, on Back/Forward,
           and on a first-paint deep link that the browser resolved too early. */}
       <HashScroll locale={locale} />

@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import type { Dictionary } from "@/lib/i18n";
+import type { Dictionary, Locale } from "@/lib/i18n";
 import { stagger } from "@/lib/motion/hooks";
 import { InstallPrompt } from "./InstallPrompt";
 import { Logo } from "./Logo";
@@ -28,13 +28,13 @@ const socials: { key: keyof Dictionary["footer"]["social"]; d: string }[] = [
   { key: "facebook", d: "M13.500 20v-7h2.300l.4-2.800h-2.700V8.500c0-.8.300-1.400 1.400-1.400h1.400V4.600c-.3 0-1.100-.1-2.100-.1-2.100 0-3.500 1.300-3.500 3.600v2.100H8.400V13h2.300v7h2.800Z" },
 ];
 
-export function Footer({ dict }: { dict: Dictionary }) {
+export function Footer({ dict, locale }: { dict: Dictionary; locale: Locale }) {
   return (
     <footer data-reveal className="reveal rv-fade relative border-t border-line bg-cream-100 pt-16">
       <FoodDecor pieces={decor} />
       <div data-reveal className="is-cascade container-x relative grid gap-12 pb-12 md:grid-cols-[1.4fr_repeat(3,1fr)]">
         <div>
-          <Logo dict={dict} />
+          <Logo dict={dict} locale={locale} />
           <p style={stagger(1)} className="reveal rv-fade mt-4 max-w-xs text-sm text-ink-muted">{dict.footer.tagline}</p>
           {/* Renders null until the browser says the app is installable, so it
               only ever adds a row inside this column. */}

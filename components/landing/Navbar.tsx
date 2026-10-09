@@ -106,7 +106,7 @@ export function Navbar({ dict, locale }: { dict: Dictionary; locale: Locale }) {
         {/* Reading progress: a single rule whose scale tracks --scroll. */}
         <span aria-hidden="true" className="progress-bar bg-brand" />
         <div className="container-x flex h-16 items-center justify-between gap-4">
-          <Logo dict={dict} />
+          <Logo dict={dict} locale={locale} />
           <nav aria-label={dict.nav.mainLabel} className="hidden lg:block">
             <ul className="flex items-center gap-1">
               {items.map((l, i) => (
