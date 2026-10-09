@@ -73,6 +73,40 @@ const pieces: Piece[] = [
    array above stays about composition and not about timing jitter. */
 const WOBBLE = [1.2, 1.9, 1.4, 2.2, 1.6, 1.3, 2.1];
 
+/**
+ * Small primary-colour accents that drift behind the phone, as ambience rather
+ * than as part of the burst's arrangement.
+ *
+ *   x / y   anchor offset from the container's centre, in % of its inline and
+ *           block size (read as cqw / cqh by .hero-accent, so the same share of
+ *           the visual reads at every breakpoint and never a fixed pixel);
+ *   s       diameter in cqw;
+ *   d / f   drift delay (s) and duration (s);
+ *   o       resting opacity, 20-35%;
+ *   ring    hollow circle instead of a filled dot.
+ */
+type Accent = { x: number; y: number; s: number; d: number; f: number; o: number; ring: boolean };
+
+const accents: Accent[] = [
+  { x: -30, y: -33, s: 3.4, d: 0.4, f: 9.5, o: 0.32, ring: true },
+  { x: 31, y: -27, s: 2.1, d: 1.9, f: 11, o: 0.28, ring: false },
+  { x: -33, y: 29, s: 2.5, d: 3.2, f: 10, o: 0.3, ring: false },
+  { x: 30, y: 34, s: 3.9, d: 2.3, f: 12, o: 0.22, ring: true },
+];
+
+/** One accent's custom properties. `--ax` / `--ay` / `--as` stay bare numbers
+    for the same reason the piece offsets do: motion.css multiplies them by
+    cqw / cqh, so the declaration can never be voided by a stray unit. */
+const accentVars = (a: Accent) =>
+  vars({
+    "--ax": a.x,
+    "--ay": a.y,
+    "--as": a.s,
+    "--ad": `${a.d}s`,
+    "--af": `${a.f}s`,
+    "--ao": a.o,
+  });
+
 /** One piece's custom properties. `--h*` keeps them clear of the motion system's
     own `--p` (per-element progress), `--d` (fan depth) and `--f` (float).
 
@@ -179,6 +213,16 @@ export function Hero({ dict }: { dict: Dictionary }) {
                 piece starts stacked and invisible behind the artwork and only
                 becomes visible as it travels out. */}
             <div aria-hidden="true" className="hero-burst">
+              {/* Accents first, so the food pieces paint over them. */}
+              {accents.map((a) => (
+                <span
+                  key={`${a.x}:${a.y}`}
+                  data-pause
+                  data-ring={a.ring ? "true" : undefined}
+                  className="hero-accent"
+                  style={accentVars(a)}
+                />
+              ))}
               {pieces.map((q, i) => (
                 <span key={q.src} data-pause className="hero-piece" style={pieceVars(q, i)}>
                   <span className="hero-piece__float">

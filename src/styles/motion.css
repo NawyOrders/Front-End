@@ -538,21 +538,26 @@
   inset-block: 6%;
   inset-inline: -8%;
   border-radius: 50%;
-  background: radial-gradient(50% 50% at 50% 50%, rgb(228 56 32 / .3), transparent 70%);
+  background: radial-gradient(50% 50% at 50% 50%, rgb(228 56 32 / .15), transparent 70%);
   filter: blur(20px);
   opacity: 0;
   pointer-events: none;
+  /* The slowest parallax on the visual: it drifts against the scroll far less
+     than the food pieces do, so the glow reads as the deepest layer. It rides
+     the standalone `translate`, which is separate from the breathing `scale`
+     below, so the two compose instead of overwriting each other. */
+  translate: 0 calc(var(--scroll, 0) * -8px);
   /* `--i` is a custom property, so the pseudo-element inherits the reveal's
      stagger index and the glow fades in on exactly the parent's delay. */
   transition: opacity var(--dur) var(--ease) calc(var(--i, 0) * var(--stagger));
 }
 .hero-visual.is-in::before {
-  opacity: .85;
-  animation: heroVisualGlow 5.4s var(--ease-soft) 1.2s infinite;
+  opacity: 1;
+  animation: heroVisualGlow 6s var(--ease-soft) 1.2s infinite;
 }
 @keyframes heroVisualGlow {
-  0%, 100% { opacity: .85; scale: 1; }
-  50% { opacity: 1; scale: 1.07; }
+  0%, 100% { scale: 1; }
+  50% { scale: 1.08; }
 }
 
 /* Layer 2. `translate` is the scroll parallax and runs on every screen; `transform`
@@ -607,6 +612,11 @@
   padding: 6px;
   border-radius: 2rem;
   background: rgb(15 42 71);
+  /* ~10% smaller. A `scale` rather than a smaller width on purpose: a transform
+     does not change the phone's reserved box, so the hero row height — and with
+     it the text, buttons and stats beside it — never moves. The frame, padding,
+     radius, notch and Hero.png all scale as one, so the look is unchanged. */
+  scale: .9;
 }
 .hero-mockup__screen {
   position: relative;
@@ -788,6 +798,36 @@
   filter: drop-shadow(0 10px 14px rgb(15 42 71 / .18));
 }
 
+/* --- 9b-2 · Hero accents -------------------------------------------------- */
+/* A few primary-colour dots and rings drifting behind the phone. They are pure
+   ambience: no burst, no reveal of their own — they simply arrive with the
+   parent's reveal (`.hero-visual` is opacity 0 until `.is-in`) and then drift
+   forever on `transform`. `translate` centres each one on its anchor, so the
+   positioning and the drift never share a property. `--dir-sign` mirrors the
+   inline offset in RTL, exactly as it does for the pieces. */
+.hero-accent {
+  position: absolute;
+  left: calc(50% + var(--ax, 0) * var(--dir-sign, 1) * 1cqw);
+  top: calc(50% + var(--ay, 0) * 1cqh);
+  inline-size: calc(var(--as, 3) * 1cqw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgb(228 56 32 / var(--ao, .3));
+  translate: -50% -50%;
+  pointer-events: none;
+  animation: heroAccentDrift var(--af, 10s) ease-in-out var(--ad, 0s) infinite;
+  will-change: transform;
+}
+.hero-accent[data-ring="true"] {
+  background: transparent;
+  border: 2px solid rgb(228 56 32 / var(--ao, .3));
+}
+@keyframes heroAccentDrift {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  33% { transform: translate3d(1.6cqw, -2.2cqh, 0) rotate(10deg); }
+  66% { transform: translate3d(-1.4cqw, -1.1cqh, 0) rotate(-8deg); }
+}
+
 /* Without container queries there is no cqw / cqh, so the offsets fall back to
    the inset the same percentages describe. The pieces land spread instead of
    stacked, which is the same picture a fraction less fluid. */
@@ -800,6 +840,11 @@
     filter: none;
   }
   .hero-visual.is-in .hero-piece { animation: none; }
+  .hero-accent {
+    left: calc(50% + var(--ax, 0) * var(--dir-sign, 1) * 1%);
+    top: calc(50% + var(--ay, 0) * 1%);
+    inline-size: calc(var(--as, 3) * 1%);
+  }
 }
 
 /* --- 9c · Food decor in the section backgrounds -------------------------- */
@@ -945,6 +990,11 @@
   .hero-piece__shadow {
     animation: heroPieceShadow calc(var(--hf, 5s) * 2.5) ease-in-out var(--hfd, 0s) infinite !important;
   }
+  /* The accents stay exactly where they rest, just without the drift. */
+  .hero-accent {
+    animation: none !important;
+    transform: none !important;
+  }
   .decor__float {
     --dr: 2deg;
     --dfy: -4px;
@@ -966,7 +1016,7 @@
     transform: none !important;
   }
   .hero-visual__tilt::after { transform: none !important; opacity: .5 !important; }
-  .hero-visual::before { opacity: .85 !important; }
+  .hero-visual::before { opacity: 1 !important; translate: none !important; }
   .rv-blur,
   .rv-zoom-out,
   .rv-flip,
