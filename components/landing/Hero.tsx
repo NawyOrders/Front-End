@@ -15,10 +15,11 @@ import { MLink } from "./MLink";
 const HERO_FETCH_PRIORITY = { fetchpriority: "high" } as React.ImgHTMLAttributes<HTMLImageElement>;
 
 /* The wide composite: every food piece arranged together on a transparent
-   canvas, so it is what the hero column is built around. `Hero.png` is the real
-   file name in public/; the images in the array below are its single pieces.
-   width/height are the file's own intrinsic size, which is what reserves the
-   right aspect-ratio box before the PNG decodes. */
+   canvas. It is the phone screen's content now — `Hero.png` is the real file
+   name in public/ — and the images in the array below are its single pieces,
+   which burst out from behind the phone on reveal. width/height are the file's
+   own intrinsic size, which is what reserves the right aspect-ratio box before
+   the PNG decodes. */
 const COMPOSITE = { src: "/Hero.png", width: 718, height: 531 };
 
 /**
@@ -165,7 +166,9 @@ export function Hero({ dict }: { dict: Dictionary }) {
               .hero-visual__tilt the cursor tilt (--rx / --ry, written by
                                 useMouseTilt) or the touch sway, plus the
                                 document parallax (--scroll) on every screen;
-              .hero-visual__img  the idle float and its drop-shadow.
+              .hero-visual__float the idle float and the phone's drop-shadow;
+                                the phone mockup hangs inside it, showing
+                                Hero.png as its screen content.
 
               The pieces are a fourth layer, and it is a sibling of the tilt
               wrapper rather than a child of it, so they inherit the reveal but
@@ -194,16 +197,25 @@ export function Hero({ dict }: { dict: Dictionary }) {
               ))}
             </div>
             <div ref={tiltRef} className="hero-visual__tilt">
-              <img
-                className="hero-visual__img"
-                src={COMPOSITE.src}
-                alt={dict.hero.visualAlt}
-                width={COMPOSITE.width}
-                height={COMPOSITE.height}
-                loading="eager"
-                decoding="async"
-                {...HERO_FETCH_PRIORITY}
-              />
+              {/* The float owns the idle bob; the phone hangs inside it and
+                  shows Hero.png as its screen content. */}
+              <div className="hero-visual__float">
+                <div className="hero-mockup">
+                  <div className="hero-mockup__screen">
+                    <span aria-hidden="true" className="hero-mockup__notch" />
+                    <img
+                      className="hero-mockup__img"
+                      src={COMPOSITE.src}
+                      alt={dict.hero.visualAlt}
+                      width={COMPOSITE.width}
+                      height={COMPOSITE.height}
+                      loading="eager"
+                      decoding="async"
+                      {...HERO_FETCH_PRIORITY}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

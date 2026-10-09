@@ -504,7 +504,10 @@
                          and --rx / --ry (written by useMouseTilt) on desktop.
                          Where there is no cursor it takes over with the slow
                          sway below.
-     .hero-visual__img   the idle float and its drop-shadow.
+     .hero-visual__float the idle float and the phone's drop-shadow. The phone
+                         mockup (.hero-mockup, with Hero.png as its screen)
+                         hangs inside, so the float's transform and the phone's
+                         own transforms never share an element.
 
    `translate` carries the scroll parallax and `transform` the tilt, the same
    split as `.fan-phone`, and neither is transitioned — they read a value that
@@ -575,19 +578,63 @@
 /* Layer 3. */
 @keyframes heroVisualFloat {
   0%, 100% { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(0, -12px, 0); }
+  50% { transform: translate3d(0, var(--hv-float-y, -12px), 0); }
 }
-.hero-visual__img {
+/* Layer 3: the idle float. It is a wrapper now — the phone hangs inside it — so
+   the float's `transform` and the phone's own transforms never share an
+   element, and the drop-shadow lands on the phone's footprint. */
+.hero-visual__float {
   position: relative;
   z-index: 1;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  animation: heroVisualFloat var(--hv-float-dur) ease-in-out infinite;
+  filter: drop-shadow(0 12px 18px rgb(15 42 71 / .2));
+  will-change: transform;
+}
+
+/* The phone mockup, restored in the hero: navy bezel, cream screen, a notch
+   pill, and Hero.png filling the screen. Same proportions as the original
+   phone the hero shipped with, rebuilt in place so the screen can hold the
+   artwork instead of the old fake app rows. */
+.hero-mockup {
+  position: relative;
+  width: 100%;
+  max-width: 340px;
+  margin-inline: auto;
+  aspect-ratio: 9 / 18.5;
+  padding: 6px;
+  border-radius: 2rem;
+  background: rgb(15 42 71);
+}
+.hero-mockup__screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 1.6rem;
+  background: rgb(255 247 234);
+}
+.hero-mockup__notch {
+  position: absolute;
+  z-index: 2;
+  top: 10px;
+  left: 50%;
+  width: 4rem;
+  height: .375rem;
+  border-radius: 9999px;
+  background: rgb(15 42 71 / .9);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.hero-mockup__img {
   display: block;
   width: 100%;
-  max-width: 640px;
-  height: auto;
-  object-fit: contain;
-  animation: heroVisualFloat var(--hv-float-dur) ease-in-out infinite;
-  filter: drop-shadow(0 22px 32px rgb(15 42 71 / .22));
-  will-change: transform;
+  height: 100%;
+  border-radius: 1.6rem;
+  object-fit: cover;
+  object-position: 50% 0;
 }
 
 /* The soft ellipse the image sits on. It shares the float's duration and start
@@ -620,11 +667,11 @@
     transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
     will-change: transform;
   }
-  .hero-visual__img {
+  .hero-visual__float {
     scale: 1;
     transition: scale var(--dur-fast) var(--ease);
   }
-  .hero-visual:hover .hero-visual__img { scale: 1.03; }
+  .hero-visual:hover .hero-visual__float { scale: 1.03; }
 }
 
 /* --- 9b · The hero pieces (burst → float) -------------------------------- */
@@ -865,7 +912,7 @@
       scale(var(--s, 1)) !important;
   }
   .fan-float,
-  .hero-visual__img,
+  .hero-visual__float,
   .hero-visual__tilt::after,
   .hero-visual::before,
   .parallax,
@@ -907,9 +954,12 @@
   /* The hero image must still be *there* under reduced motion — only the
      movement goes. Reveal, tilt, parallax, float and the glow's pulse all drop;
      the glow simply stays on instead of breathing. */
-  .hero-visual__img {
+  .hero-visual__float {
+    --hv-float-y: -5px;
+    scale: 1 !important;
     transform: none !important;
-    filter: drop-shadow(0 22px 32px rgb(15 42 71 / .22)) !important;
+    filter: drop-shadow(0 12px 18px rgb(15 42 71 / .2)) !important;
+    animation: heroVisualFloat calc(var(--hv-float-dur, 6s) * 2.5) ease-in-out infinite !important;
   }
   .hero-visual__tilt {
     translate: none !important;
@@ -1011,8 +1061,10 @@
 @media (max-width: 1023px) {
   .hero-piece { --hx: var(--hxs); --hy: var(--hys); --hs: var(--hss); }
   /* Smaller art needs a tighter but *stronger* shadow to still read as contact
-     rather than as a grey haze around the piece. */
+     rather than as a grey haze around the piece — the phone gets the same
+     treatment, a touch clearer than desktop. */
   .hero-piece__img { filter: drop-shadow(0 8px 10px rgb(15 42 71 / .28)); }
+  .hero-visual__float { filter: drop-shadow(0 8px 12px rgb(15 42 71 / .3)); }
   .hero-burst { --piece-shadow-opacity: .28; }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
@@ -1042,5 +1094,5 @@
   /* Same for the hero image: no tilt and no hover lift, but the scroll parallax
      and the automatic sway are pure CSS and run at every width, so only the
      cursor-driven `transform` is dropped. */
-  .hero-visual__img { scale: 1; }
+  .hero-visual__float { scale: 1; }
 }
