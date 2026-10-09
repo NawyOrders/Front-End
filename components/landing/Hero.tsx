@@ -240,27 +240,21 @@ export function Hero({ dict }: { dict: Dictionary }) {
                 </span>
               ))}
             </div>
-            <div ref={tiltRef} className="hero-visual__tilt">
-              {/* The float owns the idle bob; the phone hangs inside it and
-                  shows Hero.png as its screen content. */}
-              <div className="hero-visual__float">
-                <div className="hero-mockup">
-                  <div className="hero-mockup__screen">
-                    <span aria-hidden="true" className="hero-mockup__notch" />
-                    <img
-                      className="hero-mockup__img"
-                      src={COMPOSITE.src}
-                      alt={dict.hero.visualAlt}
-                      width={COMPOSITE.width}
-                      height={COMPOSITE.height}
-                      loading="eager"
-                      decoding="async"
-                      {...HERO_FETCH_PRIORITY}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
+            
+<div ref={tiltRef} className="hero-visual__tilt">
+  <div className="hero-visual__float">
+    <img
+      className="hero-mockup__img"
+      src={COMPOSITE.src}
+      alt={dict.hero.visualAlt}
+      width={COMPOSITE.width}
+      height={COMPOSITE.height}
+      loading="eager"
+      decoding="async"
+      {...HERO_FETCH_PRIORITY}
+    />
+  </div>
+</div>
           </div>
         </div>
       </div>
