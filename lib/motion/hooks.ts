@@ -294,8 +294,16 @@ export function useSlidingIndicator<T extends HTMLElement = HTMLDivElement>(): R
     paint();
     const observer = new ResizeObserver(paint);
     observer.observe(group);
-    group.querySelectorAll("[aria-pressed]").forEach((child) => observer.observe(child));
-    return () => observer.disconnect();
+    const options = group.querySelectorAll("[aria-pressed]");
+    options.forEach((child) => observer.observe(child));
+    // Pressing an option flips `aria-pressed` without any resize, which a
+    // ResizeObserver never sees — so the pill would stay on the old button.
+    const changes = new MutationObserver(paint);
+    options.forEach((child) => changes.observe(child, { attributes: true, attributeFilter: ["aria-pressed"] }));
+    return () => {
+      observer.disconnect();
+      changes.disconnect();
+    };
   }, []);
 
   return ref;

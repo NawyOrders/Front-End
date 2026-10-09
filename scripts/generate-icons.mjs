@@ -73,7 +73,10 @@ async function render(source, file, size) {
 /* 192 and 512: the favicon design verbatim, transparent outside the tile. */
 await render(mark, "icon-192.png", 192);
 await render(mark, "icon-512.png", 512);
-/* Maskable: opaque navy field, mark inside the 80% safe zone. */
-await render(plate(NAVY, 0.8), "maskable-512.png", 512);
-/* apple-touch-icon: iOS applies its own mask, so no transparent corners. */
-await render(plate(ORANGE, 0.62), "apple-touch-icon.png", 180);
+/* Maskable: opaque navy field, mark inside the safe zone so a circle/squircle
+   crop can never clip it. */
+await render(plate(NAVY, 0.72), "maskable-512.png", 512);
+/* apple-touch-icon: iOS applies its own mask, so no transparent corners. A navy
+   plate keeps the orange tile readable — on an orange plate the tile vanished
+   and only a small white glyph was left. */
+await render(plate(NAVY, 0.8), "apple-touch-icon.png", 180);

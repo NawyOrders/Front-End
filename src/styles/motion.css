@@ -318,6 +318,10 @@
 .collapse {
   display: grid;
   grid-template-rows: 0fr;
+  /* Tailwind ships a `.collapse` utility of its own (`visibility: collapse`),
+     which would otherwise hide the panel's contents even while it is open.
+     This layer is imported after globals.css, so one reset here wins. */
+  visibility: visible;
   transition: grid-template-rows var(--dur) var(--ease);
 }
 .collapse[data-open="true"] { grid-template-rows: 1fr; }
