@@ -61,11 +61,11 @@ export function generateMetadata({ params }: { params: { locale: string } }): Me
       // concept that Next 14's IconDescriptor does not model, and it is already
       // declared in app/manifest.ts where installability actually reads it.
       icon: [
-        { url: "/icon.svg?v=2", type: "image/svg+xml" },
-        { url: "/icons/icon-192.png?v=2", sizes: "192x192", type: "image/png" },
-        { url: "/icons/icon-512.png?v=2", sizes: "512x512", type: "image/png" },
+        { url: "/icon.svg?v=3", type: "image/svg+xml" },
+        { url: "/icons/icon-192.png?v=3", sizes: "192x192", type: "image/png" },
+        { url: "/icons/icon-512.png?v=3", sizes: "512x512", type: "image/png" },
       ],
-      apple: { url: "/icons/apple-touch-icon.png?v=2", sizes: "180x180", type: "image/png" },
+      apple: { url: "/icons/apple-touch-icon.png?v=3", sizes: "180x180", type: "image/png" },
     },
     alternates: {
       canonical: `/${locale}`,

@@ -19,7 +19,7 @@
  * cache it finds.
  */
 
-const CACHE = "app-v3";
+const CACHE = "app-v4";
 const OFFLINE_URL = "/offline.html";
 
 /* Paths are absolute, so they resolve against the "/" scope regardless of which
